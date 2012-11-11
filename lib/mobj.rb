@@ -3,10 +3,10 @@ module Mobj
   class ::Object
     alias responds_to? respond_to?
     def sym() respond_to?(:to_sym) ? to_sym : to_s.to_sym end
-    def mroot() mparent.nil? ? self : mparent.mroot end
+    def mroot() mparent.nil? || mparent == self ? self : mparent.mroot end
     def mparent(rent = :mparent)
       unless rent == :mparent
-        @mparent = rent
+        @mparent = rent == self ? nil : rent
         if self.is_a?(::Hash)
           each { |k, v| v.mparent(self) }
         elsif self.respond_to? :each
