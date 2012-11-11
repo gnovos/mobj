@@ -66,7 +66,7 @@ module Mobj
     end
 
     def walk(obj, root = obj)
-      obj, root = Circle.wrap(obj), Circle.wrap(root)
+      orig, obj, root = obj, Circle.wrap(obj), Circle.wrap(root)
       val = case @type
               when :literal
                 @path.to_s
@@ -95,7 +95,7 @@ module Mobj
                   lookup.tokenize.walk(root)
                 end
               when :inverse
-                raise "not implemented yet.  not sure how to implement yet, actually.  please continue to hold.  your call is important to us."
+                raise "not implemented yet. not sure how to implement yet, actually. please continue to hold. your call is important to us."
               when :root
                 tree = [@path].flatten
                 while (path = tree.shift)
@@ -105,7 +105,7 @@ module Mobj
             end
 
       val = @options[:indexes] ? val.values_at(*@options[:indexes]) : val
-      val.mparent(obj)
+      val.mparent(orig) unless orig == val
       val
     end
   end
