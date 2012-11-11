@@ -35,7 +35,7 @@ describe Mobj do
       d[:b][2][:c][:d].first.mparent.should be_nil
       d[:b][2][:c][:d].last.mparent.should be_nil
 
-      d.mparent(nil)
+      d.reparent
 
       d[:b][2][:c][:d].last.mparent.should == d[:b][2][:c][:d]
       d[:b][2][:c][:d].first.mparent.should == d[:b][2][:c][:d]
@@ -52,7 +52,6 @@ describe Mobj do
       d[:b][2].mroot.should == d
       d[:b].mroot.should == d
       d[:a].mroot.should == d
-
     end
   end
 
@@ -137,6 +136,24 @@ describe Mobj do
                       Mobj::Token.new(:path, :a),
                       Mobj::Token.new(:up),
                       Mobj::Token.new(:path, :val)).walk(Mobj::Circle.wrap(obj)).should == "right"
+
+    end
+
+    it "keeps parents proper when walking" do
+      complex = {
+          a:{ people: [ { employee_id: 0, company_id: 0 }, { employee_id: 1, company_id: 0 }] },
+          b:[
+              { company: 0, employees: [ { empid: 0, name: "Joe" }, { empid: 1, name: "Sally" } ] },
+              { company: 1, employees: [ { empid: 0, name: "Wong"}, { empid: 1, name: "Wright"} ] }
+          ]
+      }
+
+      ret = "b.employees".tokenize.walk(complex)
+      ret.should == [{:empid=>0, :name=>"Joe"}, {:empid=>1, :name=>"Sally"}, {:empid=>0, :name=>"Wong"}, {:empid=>1, :name=>"Wright"}]
+      ret[0].mparent.mparent.should == { company: 0, employees: [ { empid: 0, name: "Joe" }, { empid: 1, name: "Sally" } ] }
+      ret[1].mparent.mparent.should == { company: 0, employees: [ { empid: 0, name: "Joe" }, { empid: 1, name: "Sally" } ] }
+      ret[2].mparent.mparent.should == { company: 1, employees: [ { empid: 0, name: "Wong"}, { empid: 1, name: "Wright"} ] }
+      ret[3].mparent.mparent.should == { company: 1, employees: [ { empid: 0, name: "Wong"}, { empid: 1, name: "Wright"} ] }
 
     end
   end

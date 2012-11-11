@@ -4,14 +4,10 @@ module Mobj
     alias responds_to? respond_to?
     def sym() respond_to?(:to_sym) ? to_sym : to_s.to_sym end
     def mroot() mparent.nil? || mparent == self ? self : mparent.mroot end
+    def reparent() values.each { |v| v.mparent(self); v.reparent } if respond_to? :values end
     def mparent(rent = :mparent)
       unless rent == :mparent
         @mparent = rent == self ? nil : rent
-        if self.is_a?(::Hash)
-          each { |k, v| v.mparent(self) }
-        elsif self.respond_to? :each
-          each { |v| v.mparent(self) }
-        end
       end
       @mparent
     end
@@ -27,6 +23,7 @@ module Mobj
     alias includes? include?
     alias contains? include?
 
+    def values() self end
     def sequester(lim = 1) compact.size <= lim ? compact.first : self end
     def return_first(&block)
       returned = nil
@@ -54,10 +51,11 @@ module Mobj
     def to_s() "#{@type.to_s.upcase}(#@path#{ " => #@options" unless @options.empty?})" end
 
     def extract(obj, path)
+      obj.reparent
       if path == :*
         obj
       elsif obj.is_a?(Array)
-        obj.map { |o| extract(o, path)}
+        obj.map { |o| extract(o, path) }
       elsif path.is_a?(Array)
         path.map { |pth| obj[pth.sym] }
       else
@@ -66,7 +64,7 @@ module Mobj
     end
 
     def walk(obj, root = obj)
-      orig, obj, root = obj, Circle.wrap(obj), Circle.wrap(root)
+      obj, root = Circle.wrap(obj), Circle.wrap(root)
       val = case @type
               when :literal
                 @path.to_s
@@ -105,7 +103,6 @@ module Mobj
             end
 
       val = @options[:indexes] ? val.values_at(*@options[:indexes]) : val
-      val.mparent(orig) unless orig == val
       val
     end
   end
