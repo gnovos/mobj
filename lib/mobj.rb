@@ -14,8 +14,8 @@ module Mobj
   end
 
   class ::Class
-    def object_methods() (self.instance_methods - Object.instance_methods).sort end
-    def class_methods() (self.singleton_methods - Object.singleton_methods).sort end
+    def object_methods() (self.instance_methods(true) - Object.instance_methods(true)).sort end
+    def class_methods() (self.singleton_methods(true) - Object.singleton_methods(true)).sort end
     def defined_methods() (class_methods | object_methods).sort end
   end
 
