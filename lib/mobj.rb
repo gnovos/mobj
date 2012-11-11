@@ -104,7 +104,9 @@ module Mobj
                 obj.is_a?(Array) ? obj.flatten : obj
             end
 
-      @options[:indexes] ? val.values_at(*@options[:indexes]) : val
+      val = @options[:indexes] ? val.values_at(*@options[:indexes]) : val
+      val.mparent(obj)
+      val
     end
   end
 
