@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Mobj do
 
-  describe BasicObject do
+  describe Object do
     it "Can symbilize stuff" do
       nil.sym.should == :""
       "foo".sym.should == :foo
@@ -24,6 +24,35 @@ describe Mobj do
 
       c.mparent.should == b
       b.mparent.should == a
+
+      d = { a: Object.new, b:[ 1, 2, { c: { d: [ {e: Object.new }, {e: Object.new} ] } } ] }
+
+      d[:a].mparent.should be_nil
+      d[:b].mparent.should be_nil
+      d[:b][2].mparent.should be_nil
+      d[:b][2][:c].mparent.should be_nil
+      d[:b][2][:c][:d].mparent.should be_nil
+      d[:b][2][:c][:d].first.mparent.should be_nil
+      d[:b][2][:c][:d].last.mparent.should be_nil
+
+      d.mparent(nil)
+
+      d[:b][2][:c][:d].last.mparent.should == d[:b][2][:c][:d]
+      d[:b][2][:c][:d].first.mparent.should == d[:b][2][:c][:d]
+      d[:b][2][:c][:d].mparent.should == d[:b][2][:c]
+      d[:b][2][:c].mparent.should == d[:b][2]
+      d[:b][2].mparent.should == d[:b]
+      d[:b].mparent.should == d
+      d[:a].mparent.should == d
+
+      d[:b][2][:c][:d].last.mroot.should == d
+      d[:b][2][:c][:d].first.mroot.should == d
+      d[:b][2][:c][:d].mroot.should == d
+      d[:b][2][:c].mroot.should == d
+      d[:b][2].mroot.should == d
+      d[:b].mroot.should == d
+      d[:a].mroot.should == d
+
     end
   end
 

@@ -1,13 +1,20 @@
 module Mobj
 
-  class ::BasicObject
-    def sym() respond_to?(:to_sym) ? to_sym : to_s.to_sym end
-    def mparent(rent = :mparent) @mparent = rent unless rent == :mparent; @mparent end
-    def mroot() mparent.nil? ? self : mparent.mroot end
-  end
-
   class ::Object
     alias responds_to? respond_to?
+    def sym() respond_to?(:to_sym) ? to_sym : to_s.to_sym end
+    def mroot() mparent.nil? ? self : mparent.mroot end
+    def mparent(rent = :mparent)
+      unless rent == :mparent
+        @mparent = rent
+        if self.is_a?(::Hash)
+          each { |k, v| v.mparent(self) }
+        elsif self.respond_to? :each
+          each { |v| v.mparent(self) }
+        end
+      end
+      @mparent
+    end
   end
 
   class ::Class
@@ -66,7 +73,7 @@ module Mobj
               when :path
                 extract(obj, @path)
               when :regex
-                obj.keys.map { |key| key if key.match(@path) }.compact.map{|key| obj[key]}
+                obj.keys.map { |key| key if key.match(@path) }.compact.map{|key| obj[key] }
               when :up
                 if obj.respond_to? :parent
                   obj.mparent || obj.parent
@@ -97,7 +104,7 @@ module Mobj
                 obj.is_a?(Array) ? obj.flatten : obj
             end
 
-      @options[:indexes] ? val.values_at(*@options[:indexes])  : val
+      @options[:indexes] ? val.values_at(*@options[:indexes]) : val
     end
   end
 
