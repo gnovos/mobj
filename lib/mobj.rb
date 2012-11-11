@@ -148,6 +148,7 @@ module Mobj
   class Circle
     def self.wrap(wrapped)
       return wrapped if wrapped.is_a?(CircleHash) || wrapped.is_a?(CircleRay)
+
       if wrapped.is_a?(Array)
         circle = CircleRay.new
         wrapped.each_with_index { |item, i| circle[i] = wrap(item) }
@@ -163,21 +164,31 @@ module Mobj
   end
 
   class CircleHash < Hash
+    def *(&block)
+      if block.nil?
+        self
+      else
+        map = CircleHash.new
+        self.each_pair do |key, val|
+          map.merge!(block.call(key, val))
+        end
+        map
+      end
+    end
+
     def []=(*keys, val)
       val.mparent(self)
       keys.each { |key| store(key.sym, val) }
     end
 
     alias_method :lookup, :[]
-    def [](*keys) keys.map { |key| self.lookup(key.sym) }.sequester
-    end
+    def [](*keys) keys.map { |key| self.lookup(key.sym) }.sequester end
 
-    def method_missing(name, *args, &block)
-      self.has_key?(name) ? self[name] : super(name, *args, &block)
-    end
+    def method_missing(name, *args, &block) self.has_key?(name) ? self[name] : super(name, *args, &block) end
   end
 
   class CircleRay < Array
+    alias_method :*, :map
 
     alias_method :set, :[]=
     def []=(*keys, val)
@@ -191,7 +202,6 @@ module Mobj
         val.mparent(self)
         self.append(val)
       end
-
       self
     end
 
@@ -202,6 +212,5 @@ module Mobj
       end.sequester
     end
   end
-
 
 end

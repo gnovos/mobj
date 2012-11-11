@@ -168,7 +168,21 @@ describe Mobj do
     it "can wrap nested arrays and hashes" do
       noncirc = { foo: [ 1, 2, 3, 4], bar: { baz: 'hello', biz: 'world', whiz: [ { innera: 1 }, { innerb: 1 }, { innerc: 1 } ]}}
       circle = Mobj::Circle.wrap(noncirc)
-      circle.to_s.should == "{:foo=>[1, 2, 3, 4], :bar=>{:baz=>\"hello\", :biz=>\"world\", :whiz=>[{:innera=>1}, {:innerb=>1}, {:innerc=>1}]}}"
+
+      circle.foo.should == [1, 2, 3, 4]
+      circle.bar.should == { baz: 'hello', biz: 'world', whiz: [ { innera: 1 }, { innerb: 1 }, { innerc: 1 } ]}
+      circle.bar.baz.should == 'hello'
+      circle.bar.biz.should == 'world'
+      circle.bar.whiz.should == [ { innera: 1 }, { innerb: 1 }, { innerc: 1 } ]
+      circle.bar.whiz.first.innera.should == 1
+      circle.bar.whiz.last.innerc.should == 1
+
+      circle.mparent.should be_nil
+      circle.bar.mparent.should == circle
+      circle.bar.whiz.mparent.should == circle.bar
+      circle.bar.whiz.last.mparent.should == circle.bar.whiz
+      circle.bar.whiz.last.innerc.mparent.should == circle.bar.whiz.last
+
     end
 
   end
