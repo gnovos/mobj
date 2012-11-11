@@ -145,25 +145,30 @@ describe Mobj do
   end
 
   describe Mobj::Circle do
-    it "can sort of be either an array or a hash" do
-      circle = Mobj::Circle.new
-      circle['foo'] = 'bar'
-      circle[0] = "hello"
-      circle << "world"
-      circle[5..7] = "5-7 vals"
+    it "can keep track of it's parent" do
+      ch = Mobj::CircleHash.new
+      ca = Mobj::CircleRay.new
+      ch['foo'] = 'bar'
+      ch.foo.should == "bar"
+      ch['foo'].should == "bar"
+      ch[:foo].should == "bar"
+      ch.foo.mparent.should == ch
 
-      circle.to_s.should == "{:foo=>\"bar\", :\"0\"=>\"hello\", :\"1\"=>\"world\", :\"5\"=>\"5-7 vals\", :\"6\"=>\"5-7 vals\", :\"7\"=>\"5-7 vals\"}"
-      circle.foo.should == "bar"
-      circle['foo'].should == "bar"
-      circle[:foo].should == "bar"
-      circle[0].should == "hello"
+      ca[0] = "hello"
+      ca[5..7] = "world"
 
+      ca[0].should == "hello"
+      ca[5] = "world"
+      ca[6] = "world"
+      ca[7] = "world"
+
+      ca.first.mparent.should == ca
     end
 
     it "can wrap nested arrays and hashes" do
       noncirc = { foo: [ 1, 2, 3, 4], bar: { baz: 'hello', biz: 'world', whiz: [ { innera: 1 }, { innerb: 1 }, { innerc: 1 } ]}}
       circle = Mobj::Circle.wrap(noncirc)
-      circle.to_s.should == "{:foo=>{:\"0\"=>1, :\"1\"=>2, :\"2\"=>3, :\"3\"=>4}, :bar=>{:baz=>\"hello\", :biz=>\"world\", :whiz=>{:\"0\"=>{:innera=>1}, :\"1\"=>{:innerb=>1}, :\"2\"=>{:innerc=>1}}}}"
+      circle.to_s.should == "{:foo=>[1, 2, 3, 4], :bar=>{:baz=>\"hello\", :biz=>\"world\", :whiz=>[{:innera=>1}, {:innerb=>1}, {:innerc=>1}]}}"
     end
 
   end

@@ -47,22 +47,19 @@ module Mobj
     def to_s() "#{@type.to_s.upcase}(#@path#{ " => #@options" unless @options.empty?})" end
 
     def extract(obj, path)
-      if obj.is_a?(Array)
-        if path == :*
-          obj
-        else
-          obj.map { |o| extract(o, path)}
-        end
+      if path == :*
+        obj
+      elsif obj.is_a?(Array)
+        obj.map { |o| extract(o, path)}
+      elsif path.is_a?(Array)
+        path.map { |pth| obj[pth.sym] }
       else
-        if path.is_a?(Array)
-          path.map { |pth| obj[pth.sym] }
-        else
-          obj[path.sym]
-        end
+        obj[path.sym]
       end
     end
 
     def walk(obj, root = obj)
+      obj, root = Circle.wrap(obj), Circle.wrap(root)
       val = case @type
               when :literal
                 @path.to_s
@@ -148,28 +145,27 @@ module Mobj
     end
   end
 
-  class Circle < Hash
-
-    def initialize
-      super
-      @index = 0
+  class Circle
+    def self.wrap(wrapped)
+      return wrapped if wrapped.is_a?(CircleHash) || wrapped.is_a?(CircleRay)
+      if wrapped.is_a?(Array)
+        circle = CircleRay.new
+        wrapped.each_with_index { |item, i| circle[i] = wrap(item) }
+        circle
+      elsif wrapped.is_a?(Hash)
+        circle = CircleHash.new
+        wrapped.each_pair { |key, val| circle[key] = wrap(val) }
+        circle
+      else
+        wrapped
+      end
     end
+  end
 
-    def <<(val)
-      self[@index] = val
-      @index += 1
-    end
-
+  class CircleHash < Hash
     def []=(*keys, val)
       val.mparent(self)
-      keys.each do |key|
-        if key.is_a?(Range)
-          key.to_a.each{ |k| self[k]= val }
-        else
-          @index = key + 1 if key.is_a?(Fixnum) && key >= @index
-          store(key.sym, val)
-        end
-      end
+      keys.each { |key| store(key.sym, val) }
     end
 
     alias_method :lookup, :[]
@@ -179,19 +175,33 @@ module Mobj
     def method_missing(name, *args, &block)
       self.has_key?(name) ? self[name] : super(name, *args, &block)
     end
+  end
 
-    def self.wrap(wrapped)
-      return wrapped if wrapped.is_a? Circle
-      circle = self.new
-      if wrapped.is_a?(Array)
-        wrapped.each_with_index { |item, i| circle[i] = wrap(item) }
-      elsif wrapped.is_a?(Hash)
-        wrapped.each_pair { |key, val| circle[key] = wrap(val) }
-      else
-        return wrapped
+  class CircleRay < Array
+
+    alias_method :set, :[]=
+    def []=(*keys, val)
+      val.mparent(self)
+      set(*keys, val)
+    end
+
+    alias_method :append, :<<
+    def <<(*vals)
+      vals.each do |val|
+        val.mparent(self)
+        self.append(val)
       end
-      circle
+
+      self
+    end
+
+    alias_method :lookup, :[]
+    def [](*keys)
+      keys.map do |key|
+        self.lookup(key)
+      end.sequester
     end
   end
+
 
 end
