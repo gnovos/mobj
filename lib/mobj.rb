@@ -6,6 +6,10 @@ module Mobj
     def mroot() mparent.nil? ? self : mparent.mroot end
   end
 
+  class ::Object
+    alias responds_to? respond_to?
+  end
+
   class ::Class
     def object_methods() (self.instance_methods - Object.instance_methods).sort end
     def class_methods() (self.singleton_methods - Object.singleton_methods).sort end
@@ -13,6 +17,9 @@ module Mobj
   end
 
   class ::Array
+    alias includes? include?
+    alias contains? include?
+
     def sequester(lim = 1) compact.size <= lim ? compact.first : self end
     def return_first(&block)
       returned = nil
@@ -21,7 +28,7 @@ module Mobj
     end
   end
 
-  class Moken
+  class Token
     def initialize(type, *args)
       @type, @path, @options = type.to_sym, nil, {}
       tokens = []
@@ -63,6 +70,12 @@ module Mobj
                 extract(obj, @path)
               when :regex
                 obj.keys.map { |key| key if key.match(@path) }.compact.map{|key| obj[key]}
+              when :up
+                if obj.respond_to? :parent
+                  obj.mparent || obj.parent
+                else
+                  obj.mparent
+                end
               when :any
                 @path.return_first { |token| token.walk(obj, root) }
               when :all
@@ -96,23 +109,25 @@ module Mobj
 
     def tokenize
       tokens = []
-      scan(/\~([^\.]+)|\/(.*?)\/|\{\{(.*?)\}\}|([^\.\[]+)(?:\[([\d\+\.,-]+)\])?/).each do |literal, regex, lookup, path, indexes|
+      scan(/\~([^\.]+)|\/(.*?)\/|\{\{(.*?)\}\}|(\^)|([^\.\[]+)(?:\[([\d\+\.,-]+)\])?/).each do |literal, regex, lookup, up, path, indexes|
         if literal
-          tokens << Moken.new(:literal, literal)
+          tokens << Token.new(:literal, literal)
         elsif lookup
-          tokens << Moken.new(:lookup, lookup.tokenize)
+          tokens << Token.new(:lookup, lookup.tokenize)
         elsif regex
-          tokens << Moken.new(:regex, Regexp.new(regex))
+          tokens << Token.new(:regex, Regexp.new(regex))
+        elsif up
+          tokens << Token.new(:up)
         elsif path
           eachs = path.split(",")
           ors = path.split("|")
           ands = path.split("&")
           if eachs.size > 1
-            tokens << Moken.new(:each, eachs.map { |token| token.tokenize() })
+            tokens << Token.new(:each, eachs.map { |token| token.tokenize() })
           elsif ands.size > 1
-            tokens << Moken.new(:all, ands.map { |token| token.tokenize() })
+            tokens << Token.new(:all, ands.map { |token| token.tokenize() })
           elsif ors.size > 1
-            tokens << Moken.new(:any, ors.map { |token| token.tokenize() })
+            tokens << Token.new(:any, ors.map { |token| token.tokenize() })
           end
 
           unless ands.size + ors.size + eachs.size > 3
@@ -122,14 +137,14 @@ module Mobj
             end if indexes
 
             if path[0] == '!'
-              tokens << Moken.new(:inverse, Moken.new(:path, path[1..-1].sym, options))
+              tokens << Token.new(:inverse, Token.new(:path, path[1..-1].sym, options))
             else
-              tokens << Moken.new(:path, path.sym, options)
+              tokens << Token.new(:path, path.sym, options)
             end
           end
         end
       end
-      tokens.size == 1 ? tokens.first : Moken.new(:root, tokens)
+      tokens.size == 1 ? tokens.first : Token.new(:root, tokens)
     end
   end
 
@@ -166,6 +181,7 @@ module Mobj
     end
 
     def self.wrap(wrapped)
+      return wrapped if wrapped.is_a? Circle
       circle = self.new
       if wrapped.is_a?(Array)
         wrapped.each_with_index { |item, i| circle[i] = wrap(item) }

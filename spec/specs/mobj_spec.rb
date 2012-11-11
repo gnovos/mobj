@@ -50,7 +50,7 @@ describe Mobj do
     end
   end
 
-  describe Mobj::Moken do
+  describe Mobj::Token do
     it "can walk a tree" do
       obj = {
           a: [ "b", "c", "d"],
@@ -66,41 +66,49 @@ describe Mobj do
           foo_ccccc: "regex2",
           i: { j: [ {k:"found0"}, {k:"found1"} ] },
           l: { m: [ {n:"found2"}, {n:"found3"} ] },
-          lookval: { o: [ "i.j.k", "l.m.n" ] }
+          lookval: { o: [ "i.j.k", "l.m.n" ] },
+          up: { a: { val: "wrong" }, val: "right" }
       }
 
-      Mobj::Moken.new(:path, "a").walk(obj).should == obj[:a]
-      Mobj::Moken.new(:root,
-                      Mobj::Moken.new(:path, :b),
-                      Mobj::Moken.new(:path, :c),
-                      Mobj::Moken.new(:path, :d)).walk(obj).should == [ "foundA", "foundB"]
-      Mobj::Moken.new(:root,
-                      Mobj::Moken.new(:path, :c),
-                      Mobj::Moken.new(:path, :d)).walk(obj).should == [ 'f0','f1','f2','f3','f4','f5','f6', 'f7' ]
-      Mobj::Moken.new(:root,
-                      Mobj::Moken.new(:path, :c)).walk(obj).should == [ {d:'f0'}, {d:'f1'}, {d:'f2'}, {d:'f3'}, {d:'f4'}, {d:'f5'}, {d:'f6'}, {d:'f7'} ]
-      Mobj::Moken.new(:path, :d, indexes: [1, 2..4, 5...7, 8..-1]).walk(obj).should == [ 1, 2, 3, 4, 5, 6, 8, 9 ]
-      Mobj::Moken.new(:literal, :foo).walk(obj).should == "foo"
-      Mobj::Moken.new(:any,
-                      Mobj::Moken.new(:path, :e),
-                      Mobj::Moken.new(:path, :f),
-                      Mobj::Moken.new(:path, :g),
-                      Mobj::Moken.new(:path, :h)).walk(obj).should == "found by any"
-      Mobj::Moken.new(:each,
-                      Mobj::Moken.new(:path, :e),
-                      Mobj::Moken.new(:path, :f),
-                      Mobj::Moken.new(:path, :g),
-                      Mobj::Moken.new(:path, :h)).walk(obj).should == [nil, nil, "found by any", "not any"]
-      Mobj::Moken.new(:all,
-                      Mobj::Moken.new(:path, :e),
-                      Mobj::Moken.new(:path, :f),
-                      Mobj::Moken.new(:path, :g),
-                      Mobj::Moken.new(:path, :h)).walk(obj).should == nil
-      Mobj::Moken.new(:all,
-                      Mobj::Moken.new(:path, :g),
-                      Mobj::Moken.new(:path, :h)).walk(obj).should == [ "found by any", "not any" ]
-      Mobj::Moken.new(:regex, /foo_.*/).walk(obj).should == [ "regex0", "regex1", "regex2" ]
-      Mobj::Moken.new(:lookup, Mobj::Moken.new(:root, Mobj::Moken.new(:path, :lookval), Mobj::Moken.new(:path, :o))).walk(obj).should == [ "found0", "found1", "found2", "found3" ]
+      Mobj::Token.new(:path, "a").walk(obj).should == obj[:a]
+      Mobj::Token.new(:root,
+                      Mobj::Token.new(:path, :b),
+                      Mobj::Token.new(:path, :c),
+                      Mobj::Token.new(:path, :d)).walk(obj).should == [ "foundA", "foundB"]
+      Mobj::Token.new(:root,
+                      Mobj::Token.new(:path, :c),
+                      Mobj::Token.new(:path, :d)).walk(obj).should == [ 'f0','f1','f2','f3','f4','f5','f6', 'f7' ]
+      Mobj::Token.new(:root,
+                      Mobj::Token.new(:path, :c)).walk(obj).should == [ {d:'f0'}, {d:'f1'}, {d:'f2'}, {d:'f3'}, {d:'f4'}, {d:'f5'}, {d:'f6'}, {d:'f7'} ]
+      Mobj::Token.new(:path, :d, indexes: [1, 2..4, 5...7, 8..-1]).walk(obj).should == [ 1, 2, 3, 4, 5, 6, 8, 9 ]
+      Mobj::Token.new(:literal, :foo).walk(obj).should == "foo"
+      Mobj::Token.new(:any,
+                      Mobj::Token.new(:path, :e),
+                      Mobj::Token.new(:path, :f),
+                      Mobj::Token.new(:path, :g),
+                      Mobj::Token.new(:path, :h)).walk(obj).should == "found by any"
+      Mobj::Token.new(:each,
+                      Mobj::Token.new(:path, :e),
+                      Mobj::Token.new(:path, :f),
+                      Mobj::Token.new(:path, :g),
+                      Mobj::Token.new(:path, :h)).walk(obj).should == [nil, nil, "found by any", "not any"]
+      Mobj::Token.new(:all,
+                      Mobj::Token.new(:path, :e),
+                      Mobj::Token.new(:path, :f),
+                      Mobj::Token.new(:path, :g),
+                      Mobj::Token.new(:path, :h)).walk(obj).should == nil
+      Mobj::Token.new(:all,
+                      Mobj::Token.new(:path, :g),
+                      Mobj::Token.new(:path, :h)).walk(obj).should == [ "found by any", "not any" ]
+      Mobj::Token.new(:regex, /foo_.*/).walk(obj).should == [ "regex0", "regex1", "regex2" ]
+      Mobj::Token.new(:lookup, Mobj::Token.new(:root, Mobj::Token.new(:path, :lookval), Mobj::Token.new(:path, :o))).walk(obj).should == [ "found0", "found1", "found2", "found3" ]
+
+      Mobj::Token.new(:root,
+                      Mobj::Token.new(:path, :up),
+                      Mobj::Token.new(:path, :a),
+                      Mobj::Token.new(:up),
+                      Mobj::Token.new(:path, :val)).walk(Mobj::Circle.wrap(obj)).should == "right"
+
     end
   end
 
@@ -111,24 +119,27 @@ describe Mobj do
     end
 
     it "can parse itself into path tokens" do
-      path = "a.b1|b2|~lit.c[0,0-0,0..0,0...0,0+]./de/.f&g.{{h}}.j,k,l./(m).|&\\{\\[/.n.!o.{{p.q}}.r&s|t,u"
+      path = "a.b1|b2|~lit.c[0,0-0,0..0,0...0,0+]./de/.f&g.{{h}}.j,k,l./(m).|&\\{\\[/.n.!o.{{p.q}}.r&s|t,u.^.v"
 
       path.tokenize.to_s.should ==
-          Mobj::Moken.new(:root,
-                          Mobj::Moken.new(:path, :a),
-                          Mobj::Moken.new(:any, Mobj::Moken.new(:path, "b1"), Mobj::Moken.new(:path, "b2"), Mobj::Moken.new(:literal, "lit")),
-                          Mobj::Moken.new(:path, "c", :indexes => [0, 0..0, 0..0, 0...0, 0..-1]),
-                          Mobj::Moken.new(:regex, /de/),
-                          Mobj::Moken.new(:all, Mobj::Moken.new(:path, "f"), Mobj::Moken.new(:path, "g")),
-                          Mobj::Moken.new(:lookup, Mobj::Moken.new(:path, "h")),
-                          Mobj::Moken.new(:each, Mobj::Moken.new(:path, "j"), Mobj::Moken.new(:path, "k"), Mobj::Moken.new(:path, "l")),
-                          Mobj::Moken.new(:regex, /(m).|&\{\[/),
-                          Mobj::Moken.new(:path, "n"),
-                          Mobj::Moken.new(:inverse, Mobj::Moken.new(:path, "o")),
-                          Mobj::Moken.new(:lookup, Mobj::Moken.new(:root, Mobj::Moken.new(:path, "p"), Mobj::Moken.new(:path, "q"))),
-                          Mobj::Moken.new(:each, Mobj::Moken.new(:all, Mobj::Moken.new(:path, "r"),
-                                                              Mobj::Moken.new(:any, Mobj::Moken.new(:path, "s"), Mobj::Moken.new(:path, "t"))),
-                                        Mobj::Moken.new(:path, "u")),
+          Mobj::Token.new(:root,
+                          Mobj::Token.new(:path, :a),
+                          Mobj::Token.new(:any, Mobj::Token.new(:path, "b1"), Mobj::Token.new(:path, "b2"), Mobj::Token.new(:literal, "lit")),
+                          Mobj::Token.new(:path, "c", :indexes => [0, 0..0, 0..0, 0...0, 0..-1]),
+                          Mobj::Token.new(:regex, /de/),
+                          Mobj::Token.new(:all, Mobj::Token.new(:path, "f"), Mobj::Token.new(:path, "g")),
+                          Mobj::Token.new(:lookup, Mobj::Token.new(:path, "h")),
+                          Mobj::Token.new(:each, Mobj::Token.new(:path, "j"), Mobj::Token.new(:path, "k"), Mobj::Token.new(:path, "l")),
+                          Mobj::Token.new(:regex, /(m).|&\{\[/),
+                          Mobj::Token.new(:path, "n"),
+                          Mobj::Token.new(:inverse, Mobj::Token.new(:path, "o")),
+                          Mobj::Token.new(:lookup, Mobj::Token.new(:root, Mobj::Token.new(:path, "p"), Mobj::Token.new(:path, "q"))),
+                          Mobj::Token.new(:each, Mobj::Token.new(:all,
+                                                                 Mobj::Token.new(:path, "r"),
+                                                                 Mobj::Token.new(:any, Mobj::Token.new(:path, "s"), Mobj::Token.new(:path, "t"))), Mobj::Token.new(:path, "u")),
+                          Mobj::Token.new(:up),
+                          Mobj::Token.new(:path, "v")
+
           ).to_s
     end
   end
