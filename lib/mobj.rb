@@ -109,6 +109,7 @@ module Mobj
 
   class ::String
     def ~@() "~#{self}" end
+    def -@() "^.#{self}" end
 
     def tokenize
       tokens = []
