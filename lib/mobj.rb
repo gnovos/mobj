@@ -9,6 +9,7 @@ module Mobj
   class ::Object
     alias responds_to? respond_to?
     def sym() respond_to?(:to_sym) ? to_sym : to_s.to_sym end
+    def s() respond_to?(:to_s) ? to_s : nil end
     def mroot() mparent.nil? || mparent == self ? self : mparent.mroot end
     def reparent() values.each { |v| v.mparent(self); v.reparent } if respond_to? :values end
     def mparent(rent = :mparent)
@@ -64,7 +65,13 @@ module Mobj
     alias contains? include?
 
     def values() self end
-    def sequester(lim = 1) compact.size <= lim ? compact.first : self end
+    def sequester(crush = true)
+      if crush
+        compact.size <= 1 ? compact.first : self
+      else
+        size <= 1 ? first : self
+      end
+    end
     def return_first(&block)
       returned = nil
       each { |item| break if (returned = block.call(item)) }
@@ -72,9 +79,35 @@ module Mobj
     end
   end
 
+  module HashEx
+    def method_missing(name, *args, &block)
+      if name[-1] == '=' && args.size == 1
+        key = name[0...-1].sym
+        key = key.s if key?(key.s)
+        return self[key] = args.sequester
+      elsif name[-1] == '?'
+        key = name[0...-1].sym
+        return !!self[key, key.to_s]
+      elsif key?(name.sym) || key?(name.to_s)
+        return self[name.sym] || self[name.to_s]
+      end
+      super
+    end
+  end
+
+  class ::Hash
+    include HashEx
+
+    alias :lookup :[]
+    def [](*keys)
+      keys.map { |key| lookup(key) || lookup(key.sym) || lookup(key.s) }.sequester
+    end
+
+  end
+
   class ::MatchData
     def to_hash
-      Hash[ names.zip( captures ) ]
+      Hash[ names.map(&:sym).zip( captures ) ]
     end
   end
 
@@ -233,11 +266,6 @@ module Mobj
       val.mparent(self)
       keys.each { |key| store(key.sym, val) }
     end
-
-    alias_method :lookup, :[]
-    def [](*keys) keys.map { |key| self.lookup(key.sym) }.sequester end
-
-    def method_missing(name, *args, &block) self.has_key?(name) ? self[name] : super(name, *args, &block) end
   end
 
   class CircleRay < Array
@@ -259,11 +287,7 @@ module Mobj
     end
 
     alias_method :lookup, :[]
-    def [](*keys)
-      keys.map do |key|
-        self.lookup(key)
-      end.sequester
-    end
+    def [](*keys) keys.map { |key| self.lookup(key) }.sequester end
   end
-
 end
+

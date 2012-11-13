@@ -32,11 +32,16 @@ describe Mobj do
 
     end
 
-    it "Can symbilize stuff" do
+    it "Can symbolize and s stuff" do
       nil.sym.should == :""
       "foo".sym.should == :foo
       "".sym.should == :""
       1.sym.should == :"1"
+
+      nil.s.should == ""
+      "foo".s.should == "foo"
+      "".s.should == ""
+      1.s.should == "1"
     end
 
     it "can have parents and find it's root" do
@@ -99,11 +104,62 @@ describe Mobj do
       count.should == 3
     end
     
-    it "can sequester into a single result if there are fewer than the limit of items" do      
+    it "can sequester into a single result" do
       [1].sequester.should == 1
       [1,2].sequester.should == [1, 2]
-      [1,2].sequester(2).should == 1
-      [1,2,3].sequester(2).should == [1, 2, 3]
+
+      [1,nil].sequester.should == 1
+      [nil].sequester.should == nil
+      [nil, nil].sequester.should == nil
+
+      [1,nil].sequester(true).should == 1
+      [1,nil].sequester(false).should == [1, nil]
+
+      [nil].sequester(true).should == nil
+      [nil].sequester(false).should == nil
+
+      [nil, nil].sequester(true).should == nil
+      [nil, nil].sequester(false).should == [nil, nil]
+
+      [[]].sequester.should == []
+
+    end
+  end
+
+  describe Hash do
+    it "can do cool things" do
+      hash = { :a => 'aaa', 'b' => :bbb }
+      hash.a.should == 'aaa'
+      hash.b.should == :bbb
+
+      hash[:a].should == 'aaa'
+      hash['a'].should == 'aaa'
+      hash[:b].should == :bbb
+      hash['b'].should == :bbb
+
+      hash[5, nil, :foo, 'b'].should == :bbb
+      hash[5, nil, :foo, :a].should == 'aaa'
+
+      hash.a?.should be_true
+      hash.b?.should be_true
+      hash.c?.should be_false
+
+      hash.a = 'new a'
+      hash.b = nil
+      hash.c = 15
+
+      hash.should == {
+          a: 'new a',
+          'b' => nil,
+          c: 15
+      }
+    end
+
+  end
+
+  describe MatchData do
+    it "can hash out named captures" do
+      "abc".match(/(?<a>.)(?<b>.)(?<c>.)(?<d>.)?/).to_hash.should == { a: 'a', b: 'b', c: 'c', d: nil }
     end
   end
 
@@ -257,10 +313,6 @@ describe Mobj do
       circle.bar.whiz.mparent.should == circle.bar
       circle.bar.whiz.last.mparent.should == circle.bar.whiz
       circle.bar.whiz.last.innerc.mparent.should == circle.bar.whiz.last
-
     end
-
   end
-
-
 end
