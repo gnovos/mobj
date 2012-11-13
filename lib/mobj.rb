@@ -18,12 +18,16 @@ module Mobj
       end
       @mparent
     end
-    def otherwise(value=true)
+    def attempt(value=:root)
       Forwarder.new(self) do |root, name, *args, &block|
         if root.methods(true).include? name
           root.__send__(name, *args, &block)
+        elsif value.is_a?(Proc)
+          value.call([name] + args, &block)
+        elsif value.is_a?(Hash) && value.key?(name)
+          value[name].when.is_a?(Proc).call(*args, &block)
         else
-          value
+          value == :root ? root : value
         end
       end
     end
@@ -41,9 +45,11 @@ module Mobj
   end
 
   class ::NilClass
-    def otherwise(value=true)
+    def attempt(value=true)
       Forwarder.new(self) do |root, name, *args, &block|
-        if value.is_a?(Proc)
+        if root.methods(true).include? name
+          root.__send__(name, *args, &block)
+        elsif value.is_a?(Proc)
           value.call([name] + args, &block)
         elsif value.is_a?(Hash) && value.key?(name)
           value[name].when.is_a?(Proc).call(*args, &block)

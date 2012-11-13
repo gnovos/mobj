@@ -3,12 +3,13 @@ require 'spec_helper'
 describe Mobj do
 
   describe NilClass do
-    it "can provide otherwise values" do
-      nil.otherwise.foo.should be_true
-      nil.otherwise("right").foo.should == "right"
-      nil.otherwise({ foo: "right", bar: "wrong" }).foo.should == "right"
-      nil.otherwise({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
-      nil.otherwise({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
+    it "can attempt otherwise provide values" do
+      nil.attempt.inspect.should == "nil"
+      nil.attempt.foo.should be_true
+      nil.attempt("right").foo.should == "right"
+      nil.attempt({ foo: "right", bar: "wrong" }).foo.should == "right"
+      nil.attempt({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
+      nil.attempt({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
     end
 
   end
@@ -24,11 +25,20 @@ describe Mobj do
 
     end
 
-    it "can provide otherwise values" do
+    it "can attempt or otherwise provide values" do
 
-      "some string".otherwise("value").to_s.should == "some string"
-      "some string".otherwise("value").unknown_method.should == "value"
-      "nil".otherwise("other value").unknown_method.should == "other value"
+      "1.3".attempt.to_f.should == 1.3
+      "some string".attempt.to_s.should == "some string"
+      "some string".attempt.to_z.should == "some string"
+
+      "some string".attempt("value").to_s.should == "some string"
+      "nil".attempt("other value").unknown_method.should == "other value"
+
+      "some string".attempt("value").foo.should == "value"
+      "some string".attempt({ foo: "right", bar: "wrong" }).foo.should == "right"
+      "some string".attempt({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
+      "some string".attempt({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
+
 
     end
 
@@ -154,7 +164,6 @@ describe Mobj do
           c: 15
       }
     end
-
   end
 
   describe MatchData do
