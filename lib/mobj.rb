@@ -1,5 +1,11 @@
 module Mobj
 
+  class Forwarder < ::BasicObject
+    attr_accessor :root, :handler
+    def initialize(root, &handler) @root, @handler = root, handler end
+    def method_missing(name, *args, &block) handler.call(root, name, *args, &block) end
+  end
+
   class ::Object
     alias responds_to? respond_to?
     def sym() respond_to?(:to_sym) ? to_sym : to_s.to_sym end
@@ -10,6 +16,40 @@ module Mobj
         @mparent = rent == self ? nil : rent
       end
       @mparent
+    end
+    def otherwise(value=true)
+      Forwarder.new(self) do |root, name, *args, &block|
+        if root.methods(true).include? name
+          root.__send__(name, *args, &block)
+        else
+          value
+        end
+      end
+    end
+    def when
+      Forwarder.new(self) do |root, test_name, *test_args, &test_block|
+        if root.methods.include? test_name
+          Forwarder.new(root) do |root, pass_name, *pass_args, &pass_block|
+            root.__send__(test_name, *test_args, &test_block) ? root.__send__(pass_name, *pass_args, &pass_block) : root
+          end
+        else
+          root
+        end
+      end
+    end
+  end
+
+  class ::NilClass
+    def otherwise(value=true)
+      Forwarder.new(self) do |root, name, *args, &block|
+        if value.is_a?(Proc)
+          value.call([name] + args, &block)
+        elsif value.is_a?(Hash) && value.key?(name)
+          value[name].when.is_a?(Proc).call(*args, &block)
+        else
+          value
+        end
+      end
     end
   end
 
@@ -29,6 +69,12 @@ module Mobj
       returned = nil
       each { |item| break if (returned = block.call(item)) }
       returned
+    end
+  end
+
+  class ::MatchData
+    def to_hash
+      Hash[ names.zip( captures ) ]
     end
   end
 

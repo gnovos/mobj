@@ -2,7 +2,36 @@ require 'spec_helper'
 
 describe Mobj do
 
+  describe NilClass do
+    it "can provide otherwise values" do
+      nil.otherwise.foo.should be_true
+      nil.otherwise("right").foo.should == "right"
+      nil.otherwise({ foo: "right", bar: "wrong" }).foo.should == "right"
+      nil.otherwise({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
+      nil.otherwise({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
+    end
+
+  end
+
   describe Object do
+
+    it "can when" do
+      o = Object.new
+      def o.foo() "foo" end
+      def o.bar() "bar" end
+      o.when.is_a?(Object).foo.should == "foo"
+      o.when.is_a?(String).bar.should == o
+
+    end
+
+    it "can provide otherwise values" do
+
+      "some string".otherwise("value").to_s.should == "some string"
+      "some string".otherwise("value").unknown_method.should == "value"
+      "nil".otherwise("other value").unknown_method.should == "other value"
+
+    end
+
     it "Can symbilize stuff" do
       nil.sym.should == :""
       "foo".sym.should == :foo
