@@ -104,9 +104,10 @@ module Mobj
   class ::Hash
     include HashEx
 
-    alias :lookup :[]
-    def [](*keys)
-      keys.map { |key| lookup(key) || lookup(key.sym) || lookup(key.s) }.sequester
+    alias :mlookup :[]
+    alias :mdef :default
+    def [](*fkeys)
+      fkeys.map { |key| fetch(key) { fetch(key.sym) { fetch(key.to_s) { mdef(key) } } } }.sequester
     end
 
   end

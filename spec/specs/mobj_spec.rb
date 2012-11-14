@@ -22,11 +22,9 @@ describe Mobj do
       def o.bar() "bar" end
       o.when.is_a?(Object).foo.should == "foo"
       o.when.is_a?(String).bar.should == o
-
     end
 
     it "can attempt or otherwise provide values" do
-
       "1.3".attempt.to_f.should == 1.3
       "some string".attempt.to_s.should == "some string"
       "some string".attempt.to_z.should == "some string"
@@ -38,8 +36,6 @@ describe Mobj do
       "some string".attempt({ foo: "right", bar: "wrong" }).foo.should == "right"
       "some string".attempt({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
       "some string".attempt({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
-
-
     end
 
     it "Can symbolize and s stuff" do
@@ -132,7 +128,6 @@ describe Mobj do
       [nil, nil].sequester(false).should == [nil, nil]
 
       [[]].sequester.should == []
-
     end
   end
 
@@ -163,6 +158,10 @@ describe Mobj do
           'b' => nil,
           c: 15
       }
+
+      hash[:b].should be_nil
+      hash['b'].should be_nil
+      hash.b.should be_nil
     end
   end
 
