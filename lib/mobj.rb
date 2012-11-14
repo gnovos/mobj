@@ -107,7 +107,7 @@ module Mobj
     alias :mlookup :[]
     alias :mdef :default
     def [](*fkeys)
-      fkeys.map { |key| fetch(key) { fetch(key.sym) { fetch(key.to_s) { mdef(key) } } } }.sequester
+      fkeys.map { |key| mlookup(key) || fetch(key.sym) { fetch(key.to_s) { mdef(key) }  } }.sequester
     end
 
   end
