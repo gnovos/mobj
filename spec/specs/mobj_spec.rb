@@ -192,10 +192,18 @@ describe Mobj do
       }
 
       Mobj::Token.new(:path, "a").walk(obj).should == obj[:a]
+      Mobj::Token.new(:path, "not_found").walk(obj).should == nil
+
       Mobj::Token.new(:root,
                       Mobj::Token.new(:path, :b),
                       Mobj::Token.new(:path, :c),
                       Mobj::Token.new(:path, :d)).walk(obj).should == [ "foundA", "foundB"]
+
+      Mobj::Token.new(:root,
+                      Mobj::Token.new(:path, :b),
+                      Mobj::Token.new(:path, :not_found),
+                      Mobj::Token.new(:path, :d)).walk(obj).should == [nil, nil]
+
       Mobj::Token.new(:root,
                       Mobj::Token.new(:path, :c),
                       Mobj::Token.new(:path, :d)).walk(obj).should == [ 'f0','f1','f2','f3','f4','f5','f6', 'f7' ]

@@ -138,7 +138,7 @@ module Mobj
 
     def extract(obj, path)
       obj.reparent
-      if path == :*
+      if path == :* || obj.nil?
         obj
       elsif obj.is_a?(Array)
         obj.map { |o| extract(o, path) }
