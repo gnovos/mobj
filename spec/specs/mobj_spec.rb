@@ -176,6 +176,11 @@ describe Mobj do
       m.second.should == "b"
       m.third.should == "c"
       m.last.should be_nil
+
+      m.first?.should be_true
+      m.second?.should be_true
+      m.third?.should be_true
+      m.last?.should be_false
     end
   end
 

@@ -117,9 +117,9 @@ module Mobj
     end
 
     def method_missing(name, *args, &block)
-      if name[-1] == '?'
-        !!self.names.includes?(name[0...-1].to_s)
-      else
+      if name[-1] == '?' && names.includes?(name[0...-1])
+        return to_hash[name[0...-1].sym]
+      elsif names.includes?(name.to_s)
         return to_hash[name.sym]
       end
       super
