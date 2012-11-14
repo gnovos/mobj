@@ -109,13 +109,25 @@ module Mobj
     def [](*fkeys)
       fkeys.map { |key| mlookup(key) || fetch(key.sym) { fetch(key.to_s) { mdef(key) }  } }.sequester
     end
-
   end
 
-  class ::MatchData
+  module MatchEx
     def to_hash
       Hash[ names.map(&:sym).zip( captures ) ]
     end
+
+    def method_missing(name, *args, &block)
+      if name[-1] == '?'
+        !!self.names.includes?(name[0...-1].to_s)
+      else
+        return to_hash[name.sym]
+      end
+      super
+    end
+  end
+
+  class ::MatchData
+    include MatchEx
   end
 
   class Token

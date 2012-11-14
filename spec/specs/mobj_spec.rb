@@ -169,6 +169,14 @@ describe Mobj do
     it "can hash out named captures" do
       "abc".match(/(?<a>.)(?<b>.)(?<c>.)(?<d>.)?/).to_hash.should == { a: 'a', b: 'b', c: 'c', d: nil }
     end
+
+    it "can get named captures via method call" do
+      m = "abc".match(/(?<first>.)(?<second>.)(?<third>.)(?<last>.)?/)
+      m.first.should == "a"
+      m.second.should == "b"
+      m.third.should == "c"
+      m.last.should be_nil
+    end
   end
 
   describe Mobj::Token do
