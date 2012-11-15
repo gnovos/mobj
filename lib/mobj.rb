@@ -1,15 +1,79 @@
 module Mobj
 
+
+  #magic init
+  #num with ,
+
+
+  #class Object
+  #  alias_method :orig_method_missing, :method_missing
+  #
+  #  def method_missing(m, *a, &b)
+  #    klass = begin
+  #      (self.is_a?(Module) ? self : self.class).const_get(m)
+  #    rescue NameError
+  #    end
+  #
+  #    return klass.send(:parens, *a, &b)  if klass.respond_to? :parens
+  #    orig_method_missing m, *a, &b
+  #  end
+  #end
+
+  #class Object
+  #  alias_method :orig_method_missing, :method_missing
+  #
+  #  def method_missing(m, *a, &b)
+  #    begin
+  #      l = eval(m.to_s, binding_n(1))
+  #    rescue NameError
+  #    else
+  #      return l.call(*a)  if l.respond_to? :call
+  #    end
+  #    orig_method_missing m, *a, &b
+  #  end
+  #end
+  #
+  #def call_a_lambda_with_parenths(val)
+  #  l = lambda {|v| p v }
+  #  l(val)
+  #end
+  #
+  #call_a_lambda_with_parenths(6)
+
+  class ::BasicObject
+    def class
+      klass = class << self; self end
+      klass.superclass
+    end
+  end
+
+  class ::String
+    def to_a() split('') end
+  end
+
+  class ::Fixnum
+    def delimit(delim = ',')
+      to_s.to_a.reverse.each_slice(3).to_a.map(&:join).join(delim).reverse
+    end
+  end
+
+  class ::Float
+    def delimit(delim = ',')
+      "#{to_i.delimit(delim)}.#{to_s.to_s[/\.(\d+)$/, 1]}"
+    end
+  end
+
   class Forwarder < ::BasicObject
     attr_accessor :root, :handler
-    def initialize(root, &handler) @root, @handler = root, handler end
-    def method_missing(name, *args, &block) handler.call(root, name, *args, &block) end
+    def initialize(root = nil, &handler) @root, @handler = root, handler end
+    def method_missing(name, *args, &block) handler.call(name, *args, &block) end
   end
 
   class ::Object
     alias responds_to? respond_to?
     def sym() respond_to?(:to_sym) ? to_sym : to_s.to_sym end
-    def s() respond_to?(:to_s) ? to_s : nil end
+    def s() respond_to?(:to_s) ? to_s : inspect end
+    def str() respond_to?(:to_str) ? to_str : to_s end
     def mroot() mparent.nil? || mparent == self ? self : mparent.mroot end
     def reparent() values.each { |v| v.mparent(self); v.reparent } if respond_to? :values end
     def mparent(rent = :mparent)
@@ -19,36 +83,60 @@ module Mobj
       @mparent
     end
     def attempt(value=:root)
-      Forwarder.new(self) do |root, name, *args, &block|
-        if root.methods(true).include? name
-          root.__send__(name, *args, &block)
+      Forwarder.new do |name, *args, &block|
+        if self.methods(true).include? name
+          self.__send__(name, *args, &block)
         elsif value.is_a?(Proc)
           value.call([name] + args, &block)
         elsif value.is_a?(Hash) && value.key?(name)
           value[name].when.is_a?(Proc).call(*args, &block)
         else
-          value == :root ? root : value
+          value == :root ? self : value
         end
       end
     end
+    alias_method :try?, :attempt
+    alias_method :do?, :attempt
+    alias_method :does?, :attempt
+    alias_method :if!, :attempt
+
     def when
-      Forwarder.new(self) do |root, test_name, *test_args, &test_block|
-        if root.methods.include? test_name
-          Forwarder.new(root) do |root, pass_name, *pass_args, &pass_block|
-            root.__send__(test_name, *test_args, &test_block) ? root.__send__(pass_name, *pass_args, &pass_block) : root
+      Forwarder.new do |name, *args, &block|
+        if self.methods.include?(name) && self.__send__(name, *args, &block)
+          thn = Forwarder.new do |name, *args, &block|
+            if name.sym == :then
+              thn
+            else
+              ret = self.__send__(name, *args, &block)
+              ret.define_singleton_method(:else) { Forwarder.new { ret } }
+              ret
+            end
           end
         else
-          root
+          Forwarder.new do |name|
+            if name.sym == :then
+              els = Forwarder.new do |name|
+                if name.sym == :else
+                  Forwarder.new { |name, *args, &block| self.__send__(name, *args, &block) }
+                else
+                  els
+                end
+              end
+            else
+              self
+            end
+          end
         end
       end
     end
+    alias_method :if?, :when
   end
 
   class ::NilClass
     def attempt(value=true)
-      Forwarder.new(self) do |root, name, *args, &block|
-        if root.methods(true).include? name
-          root.__send__(name, *args, &block)
+      Forwarder.new do |name, *args, &block|
+        if self.methods(true).include? name
+          self.__send__(name, *args, &block)
         elsif value.is_a?(Proc)
           value.call([name] + args, &block)
         elsif value.is_a?(Hash) && value.key?(name)
@@ -58,6 +146,10 @@ module Mobj
         end
       end
     end
+    alias_method :try?, :attempt
+    alias_method :do?, :attempt
+    alias_method :does?, :attempt
+    alias_method :if!, :attempt
   end
 
   class ::Class

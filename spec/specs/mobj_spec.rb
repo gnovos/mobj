@@ -2,39 +2,66 @@ require 'spec_helper'
 
 describe Mobj do
 
+  describe ::Float do
+    it "can delimit" do
+      1234567890.234.delimit.should == "1,234,567,890.234"
+      1.5.delimit.should == "1.5"
+      123.1234.delimit.should == "123.1234"
+    end
+  end
+
+  describe ::Fixnum do
+    it "can delimit" do
+      1234567890.delimit.should == "1,234,567,890"
+      1.delimit.should == "1"
+      123.delimit.should == "123"
+    end
+  end
+
   describe NilClass do
     it "can attempt otherwise provide values" do
-      nil.attempt.inspect.should == "nil"
+      nil.inspect.should == "nil"
       nil.attempt.foo.should be_true
-      nil.attempt("right").foo.should == "right"
+      nil.do?("right").foo.should == "right"
       nil.attempt({ foo: "right", bar: "wrong" }).foo.should == "right"
-      nil.attempt({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
+      nil.try?({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
       nil.attempt({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
     end
-
   end
 
   describe Object do
 
     it "can when" do
       o = Object.new
-      def o.foo() "foo" end
+      def o.foo_true() true end
+      def o.foo_false() false end
       def o.bar() "bar" end
-      o.when.is_a?(Object).foo.should == "foo"
-      o.when.is_a?(String).bar.should == o
+      def o.baz() "baz" end
+      o.when.foo_true.then.bar.else.baz.should == "bar"
+      o.when.foo_false.then.bar.else.baz.should == "baz"
+      o.when.foo.then.bar.else.baz.should == "baz"
+
+      o.when.foo_true.bar.should == "bar"
+      o.when.foo_false.bar.should == o
+
+      o.if?.foo_true.then.bar.else.baz.should == "bar"
     end
 
     it "can attempt or otherwise provide values" do
-      "1.3".attempt.to_f.should == 1.3
-      "some string".attempt.to_s.should == "some string"
-      "some string".attempt.to_z.should == "some string"
+
+      "1.3".try?.to_f.should == 1.3
+      "1.3".do?.to_z.should == "1.3"
+
+      "1.3".if!.to_f.should == 1.3
+      "some string".if!.to_s.should == "some string"
+      "some string".if!.to_z.should == "some string"
 
       "some string".attempt("value").to_s.should == "some string"
       "nil".attempt("other value").unknown_method.should == "other value"
 
       "some string".attempt("value").foo.should == "value"
       "some string".attempt({ foo: "right", bar: "wrong" }).foo.should == "right"
-      "some string".attempt({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
+      "some string".does?({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
       "some string".attempt({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
     end
 
@@ -97,9 +124,9 @@ describe Mobj do
 
   describe Class do
     it "should have helper methods to get it's methods" do
-      String.object_methods.should == [:%, :*, :+, :-@, :<, :<<, :<=, :>, :>=, :[], :[]=, :ascii_only?, :between?, :bytes, :bytesize, :byteslice, :capitalize, :capitalize!, :casecmp, :center, :chars, :chomp, :chomp!, :chop, :chop!, :chr, :clear, :codepoints, :concat, :count, :crypt, :delete, :delete!, :downcase, :downcase!, :dump, :each_byte, :each_char, :each_codepoint, :each_line, :empty?, :encode, :encode!, :encoding, :end_with?, :force_encoding, :getbyte, :gsub, :gsub!, :hex, :include?, :index, :insert, :intern, :length, :lines, :ljust, :lstrip, :lstrip!, :match, :next, :next!, :oct, :ord, :partition, :prepend, :replace, :reverse, :reverse!, :rindex, :rjust, :rpartition, :rstrip, :rstrip!, :scan, :setbyte, :shellescape, :shellsplit, :size, :slice, :slice!, :split, :squeeze, :squeeze!, :start_with?, :strip, :strip!, :sub, :sub!, :succ, :succ!, :sum, :swapcase, :swapcase!, :to_c, :to_f, :to_i, :to_r, :to_str, :to_sym, :tokenize, :tr, :tr!, :tr_s, :tr_s!, :unpack, :upcase, :upcase!, :upto, :valid_encoding?, :~]
+      String.object_methods.should == [:%, :*, :+, :-@, :<, :<<, :<=, :>, :>=, :[], :[]=, :ascii_only?, :between?, :bytes, :bytesize, :byteslice, :capitalize, :capitalize!, :casecmp, :center, :chars, :chomp, :chomp!, :chop, :chop!, :chr, :clear, :codepoints, :concat, :count, :crypt, :delete, :delete!, :downcase, :downcase!, :dump, :each_byte, :each_char, :each_codepoint, :each_line, :empty?, :encode, :encode!, :encoding, :end_with?, :force_encoding, :getbyte, :gsub, :gsub!, :hex, :include?, :index, :insert, :intern, :length, :lines, :ljust, :lstrip, :lstrip!, :match, :next, :next!, :oct, :ord, :partition, :prepend, :replace, :reverse, :reverse!, :rindex, :rjust, :rpartition, :rstrip, :rstrip!, :scan, :setbyte, :shellescape, :shellsplit, :size, :slice, :slice!, :split, :squeeze, :squeeze!, :start_with?, :strip, :strip!, :sub, :sub!, :succ, :succ!, :sum, :swapcase, :swapcase!, :to_a, :to_c, :to_f, :to_i, :to_r, :to_str, :to_sym, :tokenize, :tr, :tr!, :tr_s, :tr_s!, :unpack, :upcase, :upcase!, :upto, :valid_encoding?, :~]
       String.class_methods.should == [:try_convert]
-      String.defined_methods.should == [:%, :*, :+, :-@, :<, :<<, :<=, :>, :>=, :[], :[]=, :ascii_only?, :between?, :bytes, :bytesize, :byteslice, :capitalize, :capitalize!, :casecmp, :center, :chars, :chomp, :chomp!, :chop, :chop!, :chr, :clear, :codepoints, :concat, :count, :crypt, :delete, :delete!, :downcase, :downcase!, :dump, :each_byte, :each_char, :each_codepoint, :each_line, :empty?, :encode, :encode!, :encoding, :end_with?, :force_encoding, :getbyte, :gsub, :gsub!, :hex, :include?, :index, :insert, :intern, :length, :lines, :ljust, :lstrip, :lstrip!, :match, :next, :next!, :oct, :ord, :partition, :prepend, :replace, :reverse, :reverse!, :rindex, :rjust, :rpartition, :rstrip, :rstrip!, :scan, :setbyte, :shellescape, :shellsplit, :size, :slice, :slice!, :split, :squeeze, :squeeze!, :start_with?, :strip, :strip!, :sub, :sub!, :succ, :succ!, :sum, :swapcase, :swapcase!, :to_c, :to_f, :to_i, :to_r, :to_str, :to_sym, :tokenize, :tr, :tr!, :tr_s, :tr_s!, :try_convert, :unpack, :upcase, :upcase!, :upto, :valid_encoding?, :~]
+      String.defined_methods.should == [:%, :*, :+, :-@, :<, :<<, :<=, :>, :>=, :[], :[]=, :ascii_only?, :between?, :bytes, :bytesize, :byteslice, :capitalize, :capitalize!, :casecmp, :center, :chars, :chomp, :chomp!, :chop, :chop!, :chr, :clear, :codepoints, :concat, :count, :crypt, :delete, :delete!, :downcase, :downcase!, :dump, :each_byte, :each_char, :each_codepoint, :each_line, :empty?, :encode, :encode!, :encoding, :end_with?, :force_encoding, :getbyte, :gsub, :gsub!, :hex, :include?, :index, :insert, :intern, :length, :lines, :ljust, :lstrip, :lstrip!, :match, :next, :next!, :oct, :ord, :partition, :prepend, :replace, :reverse, :reverse!, :rindex, :rjust, :rpartition, :rstrip, :rstrip!, :scan, :setbyte, :shellescape, :shellsplit, :size, :slice, :slice!, :split, :squeeze, :squeeze!, :start_with?, :strip, :strip!, :sub, :sub!, :succ, :succ!, :sum, :swapcase, :swapcase!, :to_a, :to_c, :to_f, :to_i, :to_r, :to_str, :to_sym, :tokenize, :tr, :tr!, :tr_s, :tr_s!, :try_convert, :unpack, :upcase, :upcase!, :upto, :valid_encoding?, :~]
     end
   end
 
