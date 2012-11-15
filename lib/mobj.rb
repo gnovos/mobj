@@ -2,9 +2,6 @@ module Mobj
 
 
   #magic init
-  #num with ,
-
-
   #class Object
   #  alias_method :orig_method_missing, :method_missing
   #
@@ -47,13 +44,9 @@ module Mobj
     end
   end
 
-  class ::String
-    def to_a() split('') end
-  end
-
   class ::Fixnum
     def delimit(delim = ',')
-      to_s.to_a.reverse.each_slice(3).to_a.map(&:join).join(delim).reverse
+      to_s.split('').reverse.each_slice(3).to_a.map(&:join).join(delim).reverse
     end
   end
 
