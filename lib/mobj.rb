@@ -238,11 +238,19 @@ module Mobj
       if path == :* || obj.nil?
         obj
       elsif obj.is_a?(Array)
-        obj.map { |o| extract(o, path) }
+        if path[0] == '*' && obj.respond_to?(path[1..-1].sym)
+          obj.__send__(path[1..-1].sym)
+        else
+          obj.map { |o| extract(o, path) }
+        end
       elsif path.is_a?(Array)
         path.map { |pth| obj[pth.sym] }
-      else
+      elsif obj.respond_to?(path.sym)
+        obj.__send__(path.sym)
+      elsif obj.respond_to? :[]
         obj[path.sym]
+      else
+        nil
       end
     end
 
@@ -291,8 +299,18 @@ module Mobj
   end
 
   class ::String
-    def ~@() "~#{self}" end
-    def -@() "^.#{self}" end
+
+    def matches(regexp, &block)
+      start = 0
+      while (match = match(regexp, start))
+        start = match.end(0)
+        block.call(match)
+      end
+    end
+
+    def walk(obj)
+      tokenize.walk(obj)
+    end
 
     def tokenize
       tokens = []
@@ -331,7 +349,7 @@ module Mobj
           end
         end
       end
-      tokens.size == 1 ? tokens.first : Token.new(:root, tokens)
+      tokens = tokens.size == 1 ? tokens.first : Token.new(:root, tokens)
     end
   end
 

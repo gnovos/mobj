@@ -124,9 +124,9 @@ describe Mobj do
 
   describe Class do
     it "should have helper methods to get it's methods" do
-      String.object_methods.should == [:%, :*, :+, :-@, :<, :<<, :<=, :>, :>=, :[], :[]=, :ascii_only?, :between?, :bytes, :bytesize, :byteslice, :capitalize, :capitalize!, :casecmp, :center, :chars, :chomp, :chomp!, :chop, :chop!, :chr, :clear, :codepoints, :concat, :count, :crypt, :delete, :delete!, :downcase, :downcase!, :dump, :each_byte, :each_char, :each_codepoint, :each_line, :empty?, :encode, :encode!, :encoding, :end_with?, :force_encoding, :getbyte, :gsub, :gsub!, :hex, :include?, :index, :insert, :intern, :length, :lines, :ljust, :lstrip, :lstrip!, :match, :next, :next!, :oct, :ord, :partition, :prepend, :replace, :reverse, :reverse!, :rindex, :rjust, :rpartition, :rstrip, :rstrip!, :scan, :setbyte, :shellescape, :shellsplit, :size, :slice, :slice!, :split, :squeeze, :squeeze!, :start_with?, :strip, :strip!, :sub, :sub!, :succ, :succ!, :sum, :swapcase, :swapcase!, :to_c, :to_f, :to_i, :to_r, :to_str, :to_sym, :tokenize, :tr, :tr!, :tr_s, :tr_s!, :unpack, :upcase, :upcase!, :upto, :valid_encoding?, :~]
-      String.class_methods.should == [:try_convert]
-      String.defined_methods.should == [:%, :*, :+, :-@, :<, :<<, :<=, :>, :>=, :[], :[]=, :ascii_only?, :between?, :bytes, :bytesize, :byteslice, :capitalize, :capitalize!, :casecmp, :center, :chars, :chomp, :chomp!, :chop, :chop!, :chr, :clear, :codepoints, :concat, :count, :crypt, :delete, :delete!, :downcase, :downcase!, :dump, :each_byte, :each_char, :each_codepoint, :each_line, :empty?, :encode, :encode!, :encoding, :end_with?, :force_encoding, :getbyte, :gsub, :gsub!, :hex, :include?, :index, :insert, :intern, :length, :lines, :ljust, :lstrip, :lstrip!, :match, :next, :next!, :oct, :ord, :partition, :prepend, :replace, :reverse, :reverse!, :rindex, :rjust, :rpartition, :rstrip, :rstrip!, :scan, :setbyte, :shellescape, :shellsplit, :size, :slice, :slice!, :split, :squeeze, :squeeze!, :start_with?, :strip, :strip!, :sub, :sub!, :succ, :succ!, :sum, :swapcase, :swapcase!, :to_c, :to_f, :to_i, :to_r, :to_str, :to_sym, :tokenize, :tr, :tr!, :tr_s, :tr_s!, :try_convert, :unpack, :upcase, :upcase!, :upto, :valid_encoding?, :~]
+      StringScanner.object_methods.should == [:<<, :[], :beginning_of_line?, :bol?, :check, :check_until, :clear, :concat, :empty?, :eos?, :exist?, :get_byte, :getbyte, :getch, :match?, :matched, :matched?, :matched_size, :peek, :peep, :pointer, :pointer=, :pos, :pos=, :post_match, :pre_match, :reset, :rest, :rest?, :rest_size, :restsize, :scan, :scan_full, :scan_until, :search_full, :skip, :skip_until, :string, :string=, :terminate, :unscan]
+      StringScanner.class_methods.should == [:must_C_version]
+      StringScanner.defined_methods.should == [:<<, :[], :beginning_of_line?, :bol?, :check, :check_until, :clear, :concat, :empty?, :eos?, :exist?, :get_byte, :getbyte, :getch, :match?, :matched, :matched?, :matched_size, :must_C_version, :peek, :peep, :pointer, :pointer=, :pos, :pos=, :post_match, :pre_match, :reset, :rest, :rest?, :rest_size, :restsize, :scan, :scan_full, :scan_until, :search_full, :skip, :skip_until, :string, :string=, :terminate, :unscan]
     end
   end
 
@@ -296,13 +296,24 @@ describe Mobj do
       ret[2].mparent.mparent.should == { company: 1, employees: [ { empid: 0, name: "Wong"}, { empid: 1, name: "Wright"} ] }
       ret[3].mparent.mparent.should == { company: 1, employees: [ { empid: 0, name: "Wong"}, { empid: 1, name: "Wright"} ] }
 
+      "b.employees".walk(complex).should == ret
     end
   end
 
   describe String do
-    it "can convery to literal using unary ~ operator" do
-      str = ~"str"
-      str.should == "~str"
+
+    it "can scan returning actual match data" do
+      foo = ['a', 'c']
+      bar = ['b', 'd']
+
+      "abcd".matches(/(?<foo>.)(?<bar>.)/) do |match|
+        match.foo.should == foo.shift
+        match.bar.should == bar.shift
+      end
+
+      foo.should be_empty
+      bar.should be_empty
+
     end
 
     it "can parse itself into path tokens" do
