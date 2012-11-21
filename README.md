@@ -20,7 +20,8 @@ Fine.
 This is really the most useful part of the entire library, when you get right down to it.
 String is given a method called "tokenize" that allows it's contents to be split up into
 a structured path of tokens.  This tokenized path can then be used to do some pretty amazing
-things in terms of walking through arbitrarily complex trees of data.
+things in terms of walking through arbitrarily complex trees of data.  There's a convenience method
+on String called "walk" that handles this all for you.
 
 For example, given this object:
 
