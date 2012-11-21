@@ -365,6 +365,31 @@ describe Mobj do
 
           ).to_s
     end
+
+    it "can walk a path" do
+      obj = {
+          name: { first: "Joe", last: "Smith" },
+          ids: [ 1, 3, 5, 16, 941, 13, 100, 3, 0, 104 ],
+          auth_tokens: [ { provider: { name: "example.com", id:1 }, token: { auth: "123456", expire: "10-20-2012" } },
+                         { provider: { name: "site.com", id:2 }, token: { authentication_token: "891011", date: "10-20-2013" } }
+          ],
+          primary_key: { path: "auth_tokens.provider" }
+      }
+
+      "name.first".walk(obj).should == "Joe"
+
+      "name.first,last".walk(obj).should == ["Joe", "Smith"]
+
+      "ids[1, 3, 5 - 7, 9+]".walk(obj).should == [3, 16, 13, 100, 3, 104]
+
+      "auth_tokens.token./^auth/.*to_i".walk(obj).should == [ 123456, 891011 ]
+
+      "auth_tokens.token.expire|date".walk(obj).should == [ "10-20-2012", "10-20-2013" ]
+
+      "/auth/.provider,token.auth|authentication_token|~N/A".walk(obj).should == ["N/A", "N/A", "123456", "891011"]
+
+      "{{primary_key.path}}.id".walk(obj).should == [1, 2]
+    end
   end
 
   describe Mobj::Circle do

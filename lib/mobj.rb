@@ -246,12 +246,30 @@ module Mobj
         end
       elsif path.is_a?(Array)
         path.map { |pth| obj[pth.sym] }
+      elsif path[0] == '*' && obj.respond_to?(path[1..-1].sym)
+        obj.__send__(path[1..-1].sym)
+      elsif obj.respond_to? :[]
+        if obj.is_a?(Hash)
+          obj[path.sym]
+        else
+          obj[path.to_s.to_i] if path.to_s =~ /^\d+$/
+        end
       elsif obj.respond_to?(path.sym)
         obj.__send__(path.sym)
-      elsif obj.respond_to? :[]
-        obj[path.sym]
       else
         nil
+      end
+    end
+
+
+
+    def find(obj, match)
+      if obj.is_a?(Array)
+        obj.map do |child|
+          find(child, match)
+        end
+      elsif obj.respond_to?(:keys)
+        obj.keys.map { |key| key if key.match(match) }.compact.map{|key| obj[key] }
       end
     end
 
@@ -263,7 +281,7 @@ module Mobj
               when :path
                 extract(obj, @path)
               when :regex
-                obj.keys.map { |key| key if key.match(@path) }.compact.map{|key| obj[key] }
+                find(obj, @path)
               when :up
                 if obj.respond_to? :parent
                   obj.__mobj__parent || obj.__mobj__parent
@@ -271,7 +289,11 @@ module Mobj
                   obj.__mobj__parent
                 end
               when :any
-                @path.return_first { |token| token.walk(obj, root) }
+                if obj.is_a?(Array)
+                  obj.map { |o| walk(o, root) }
+                else
+                  @path.return_first { |token| token.walk(obj, root) }
+                end
               when :all
                 matches = @path.map { |token| token.walk(obj, root) }
                 matches.compact.size == @path.size ? matches : nil
@@ -279,6 +301,7 @@ module Mobj
                 @path.map { |token| token.walk(obj, root) }
               when :lookup
                 lookup = @path.walk(obj)
+                puts "lookup '#{lookup}':#{obj}:#{@path}"
                 if lookup.is_a?(Array)
                   lookup.flatten.map { |lu| lu.tokenize.walk(root) }.flatten(1)
                 else

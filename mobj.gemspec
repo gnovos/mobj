@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name         = 'mobj'
-  s.version      = '1.7.0'
+  s.version      = '1.7.1'
   s.homepage     = 'https://github.com/gnovos/mobj'
   s.summary      = 'Helpful utils and extentions'
   s.description  = 'Utils and extentions for various ruby objects'
