@@ -29,14 +29,16 @@ For example, given this object:
 obj = {
     name: { first: "Joe", last: "Smith" },
     ids: [ 1, 3, 5, 16, 941, 13, 100, 3, 0, 104 ],
-    auth_tokens: [ { provider: { name: "example.com", id:123 }, token: { auth: "123456", expire: "10-20-2012" } },
-                   { provider: { name: "site.com", id:265 },    token: { authentication_token: "891011", date: "10-20-2013" } }
+    auth_tokens: [ { provider: { name: "example.com", id:123 },
+                     token: { auth: "123456", expire: "10-20-2012" } },
+                   { provider: { name: "site.com", id:265 },
+                     token: { authentication_token: "891011", date: "10-20-2013" } }
     ],
     primary_key: { path: "auth_tokens.provider" }
 }
 ```
 
-...  Easily traverse it's data using rules embedded into a simple string, like so:
+Easily traverse it's data using rules embedded into a simple string, like so:
 
 ```ruby
 # Walk a simple object path:
@@ -48,10 +50,10 @@ obj = {
 #=> ["Joe", "Smith"]
 
 # Or indexes (and ranges) in an array:
-"ids[1, 3, 5 - 7, 9+]".walk(obj)
+"ids[1, 3, 5..7, 9+]".walk(obj)
 #=> [3, 16, 13, 100, 3, 104]
 
-# Use regular expressions or method calls as selection keys:
+# Use regular expressions or even method calls as selection keys:
 "auth_tokens.token./^auth/.*to_i".walk(obj)
 #=> [ 123456, 891011 ]
 

@@ -380,7 +380,7 @@ describe Mobj do
 
       "name.first,last".walk(obj).should == ["Joe", "Smith"]
 
-      "ids[1, 3, 5 - 7, 9+]".walk(obj).should == [3, 16, 13, 100, 3, 104]
+      "ids[1, 3, 5..7, 9+]".walk(obj).should == [3, 16, 13, 100, 3, 104]
 
       "auth_tokens.token./^auth/.*to_i".walk(obj).should == [ 123456, 891011 ]
 
