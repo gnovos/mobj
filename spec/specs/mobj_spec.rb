@@ -27,6 +27,15 @@ describe Mobj do
 
       nil.null!.foo.bar.baz.should be_nil
       expect { nil.foo }.to raise_exception
+
+      o = "foo:bar"
+      o.null!.split(':').should == ["foo", "bar"]
+
+      o = nil
+      o.null!.split(':').should be_nil
+
+      expect { o.null!.foo.bar.nil! || o.foo }.to raise_exception
+
     end
 
     it "can attempt otherwise provide values" do

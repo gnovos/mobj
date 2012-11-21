@@ -5,6 +5,8 @@ module Mobj
       klass = class << self; self end
       klass.superclass
     end
+    def null!() self end
+    def nil!() self end
   end
 
   class ::Fixnum
