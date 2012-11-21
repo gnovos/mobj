@@ -1,42 +1,5 @@
 module Mobj
 
-
-  #magic init
-  #class Object
-  #  alias_method :orig_method_missing, :method_missing
-  #
-  #  def method_missing(m, *a, &b)
-  #    klass = begin
-  #      (self.is_a?(Module) ? self : self.class).const_get(m)
-  #    rescue NameError
-  #    end
-  #
-  #    return klass.send(:parens, *a, &b)  if klass.respond_to? :parens
-  #    orig_method_missing m, *a, &b
-  #  end
-  #end
-
-  #class Object
-  #  alias_method :orig_method_missing, :method_missing
-  #
-  #  def method_missing(m, *a, &b)
-  #    begin
-  #      l = eval(m.to_s, binding_n(1))
-  #    rescue NameError
-  #    else
-  #      return l.call(*a)  if l.respond_to? :call
-  #    end
-  #    orig_method_missing m, *a, &b
-  #  end
-  #end
-  #
-  #def call_a_lambda_with_parenths(val)
-  #  l = lambda {|v| p v }
-  #  l(val)
-  #end
-  #
-  #call_a_lambda_with_parenths(6)
-
   class ::BasicObject
     def class
       klass = class << self; self end
@@ -65,15 +28,14 @@ module Mobj
   class ::Object
     alias responds_to? respond_to?
     def sym() respond_to?(:to_sym) ? to_sym : to_s.to_sym end
-    def s() respond_to?(:to_s) ? to_s : inspect end
-    def str() respond_to?(:to_str) ? to_str : to_s end
-    def mroot() mparent.nil? || mparent == self ? self : mparent.mroot end
-    def reparent() values.each { |v| v.mparent(self); v.reparent } if respond_to? :values end
-    def mparent(rent = :mparent)
-      unless rent == :mparent
-        @mparent = rent == self ? nil : rent
+    def __mobj__root() __mobj__parent.nil? || __mobj__parent == self ? self : __mobj__parent.__mobj__root end
+    def __mobj__reparent() values.each { |v| v.__mobj__parent(self); v.__mobj__reparent } if respond_to? :values end
+    def __mobj__parent?() !@__mobj__parent.nil? end
+    def __mobj__parent(rent = :"__mobj__parent")
+      unless rent == :"__mobj__parent"
+        @__mobj__parent = rent == self ? nil : rent
       end
-      @mparent
+      @__mobj__parent
     end
     def attempt(value=:root)
       Forwarder.new do |name, *args, &block|
@@ -88,19 +50,25 @@ module Mobj
         end
       end
     end
-    alias_method :try?, :attempt
+    alias_method :try!, :attempt
     alias_method :do?, :attempt
     alias_method :does?, :attempt
     alias_method :if!, :attempt
 
+    def try?()
+      Forwarder.new do |name, *args, &block|
+        methods(true).include?(name) ? __send__(name, *args, &block) : nil.null!
+      end
+    end
+
     def when
       Forwarder.new do |name, *args, &block|
-        if self.methods.include?(name) && self.__send__(name, *args, &block)
+        if methods.include?(name) && __send__(name, *args, &block)
           thn = Forwarder.new do |name, *args, &block|
             if name.sym == :then
               thn
             else
-              ret = self.__send__(name, *args, &block)
+              ret = __send__(name, *args, &block)
               ret.define_singleton_method(:else) { Forwarder.new { ret } }
               ret
             end
@@ -110,7 +78,7 @@ module Mobj
             if name.sym == :then
               els = Forwarder.new do |name|
                 if name.sym == :else
-                  Forwarder.new { |name, *args, &block| self.__send__(name, *args, &block) }
+                  Forwarder.new { |name, *args, &block| __send__(name, *args, &block) }
                 else
                   els
                 end
@@ -126,6 +94,37 @@ module Mobj
   end
 
   class ::NilClass
+    MOBJ_NULL_REGION_BEGIN = __LINE__
+    def __mobj__caller()
+      caller.find do |frame|
+        (file, line) = frame.split(":")
+        file != __FILE__ || !(MOBJ_NULL_REGION_BEGIN..MOBJ_NULL_REGION_END).cover?(line.to_i)
+      end
+    end
+    def null?()
+      @@null ||= nil
+      @@null && @@null == __mobj__caller
+    end
+    def null!()
+      @@null = __mobj__caller
+      self
+    end
+    def nil!
+      @@null = nil
+      self
+    end
+    def method_missing(name, *args, &block)
+      if null?
+        self
+      else
+        nil!
+        super
+      end
+    end
+    alias_method :try?, :null!
+
+    MOBJ_NULL_REGION_END = __LINE__
+
     def attempt(value=true)
       Forwarder.new do |name, *args, &block|
         if self.methods(true).include? name
@@ -139,7 +138,7 @@ module Mobj
         end
       end
     end
-    alias_method :try?, :attempt
+    alias_method :try!, :attempt
     alias_method :do?, :attempt
     alias_method :does?, :attempt
     alias_method :if!, :attempt
@@ -174,7 +173,7 @@ module Mobj
     def method_missing(name, *args, &block)
       if name[-1] == '=' && args.size == 1
         key = name[0...-1].sym
-        key = key.s if key?(key.s)
+        key = key.to_s if key?(key.to_s)
         return self[key] = args.sequester
       elsif name[-1] == '?'
         key = name[0...-1].sym
@@ -234,7 +233,7 @@ module Mobj
     def to_s() "#{@type.to_s.upcase}(#@path#{ " => #@options" unless @options.empty?})" end
 
     def extract(obj, path)
-      obj.reparent
+      obj.__mobj__reparent
       if path == :* || obj.nil?
         obj
       elsif obj.is_a?(Array)
@@ -265,9 +264,9 @@ module Mobj
                 obj.keys.map { |key| key if key.match(@path) }.compact.map{|key| obj[key] }
               when :up
                 if obj.respond_to? :parent
-                  obj.mparent || obj.parent
+                  obj.__mobj__parent || obj.__mobj__parent
                 else
-                  obj.mparent
+                  obj.__mobj__parent
                 end
               when :any
                 @path.return_first { |token| token.walk(obj, root) }
@@ -300,12 +299,15 @@ module Mobj
 
   class ::String
 
-    def matches(regexp, &block)
+    def matches(regexp)
       start = 0
+      matches = []
       while (match = match(regexp, start))
         start = match.end(0)
-        block.call(match)
+        matches << match
+        yield match if block_given?
       end
+      matches
     end
 
     def walk(obj)
@@ -314,19 +316,29 @@ module Mobj
 
     def tokenize
       tokens = []
-      scan(/\~([^\.]+)|\/(.*?)\/|\{\{(.*?)\}\}|(\^)|([^\.\[]+)(?:\[([\d\+\.,-]+)\])?/).each do |literal, regex, lookup, up, path, indexes|
-        if literal
-          tokens << Token.new(:literal, literal)
-        elsif lookup
-          tokens << Token.new(:lookup, lookup.tokenize)
-        elsif regex
-          tokens << Token.new(:regex, Regexp.new(regex))
-        elsif up
+
+      lit = /\~(?<literal>[^\.]+)/
+      regex = /\/(?<regex>.*?(?<!\\))\//
+      lookup = /\{\{(?<lookup>.*?)\}\}/
+      up = /(?<up>\^)/
+      path = /(?<path>[^\.\[]+)/
+      indexes = /(?<indexes>[\d\+\.,-]+)/
+
+      matcher = /#{lit}|#{regex}|#{lookup}|#{up}|#{path}(?:\[#{indexes}\])?/
+
+      matches(matcher) do |match|
+        if match.literal?
+          tokens << Token.new(:literal, match.literal)
+        elsif match.lookup?
+          tokens << Token.new(:lookup, match.lookup.tokenize)
+        elsif match.regex?
+          tokens << Token.new(:regex, Regexp.new(match.regex))
+        elsif match.up?
           tokens << Token.new(:up)
-        elsif path
-          eachs = path.split(",")
-          ors = path.split("|")
-          ands = path.split("&")
+        elsif match.path?
+          eachs = match.path.split(",")
+          ors = match.path.split("|")
+          ands = match.path.split("&")
           if eachs.size > 1
             tokens << Token.new(:each, eachs.map { |token| token.tokenize() })
           elsif ands.size > 1
@@ -337,19 +349,26 @@ module Mobj
 
           unless ands.size + ors.size + eachs.size > 3
             options = {}
-            options[:indexes] = indexes.scan(/(\d+)(?:(?:\.\.(\.)?|-?)(-?\d+|\+))?/).map do |start, exc, len|
-              len.nil? ? start.to_i : (Range.new(start.to_i, (len == "+" ? -1 : len.to_i), !exc.nil?))
-            end if indexes
+            index_matcher = /(?<low>\d+)(?:(?:\.\.(?<ex>\.)?|-?)(?<high>-?\d+|\+))?/
 
-            if path[0] == '!'
-              tokens << Token.new(:inverse, Token.new(:path, path[1..-1].sym, options))
+            options[:indexes] = match.indexes.matches(index_matcher).map do |index|
+              if index.high?
+                Range.new(index.low.to_i, (index.high == "+" ? -1 : index.high.to_i), index.ex?)
+              else
+                index.low.to_i
+              end
+            end if match.indexes?
+
+            if match.path[0] == '!'
+              tokens << Token.new(:inverse, Token.new(:path, match.path[1..-1].sym, options))
             else
-              tokens << Token.new(:path, path.sym, options)
+              tokens << Token.new(:path, match.path.sym, options)
             end
           end
         end
       end
-      tokens = tokens.size == 1 ? tokens.first : Token.new(:root, tokens)
+
+      tokens.size == 1 ? tokens.first : Token.new(:root, tokens)
     end
   end
 
@@ -385,7 +404,7 @@ module Mobj
     end
 
     def []=(*keys, val)
-      val.mparent(self)
+      val.__mobj__parent(self)
       keys.each { |key| store(key.sym, val) }
     end
   end
@@ -395,14 +414,14 @@ module Mobj
 
     alias_method :set, :[]=
     def []=(*keys, val)
-      val.mparent(self)
+      val.__mobj__parent(self)
       set(*keys, val)
     end
 
     alias_method :append, :<<
     def <<(*vals)
       vals.each do |val|
-        val.mparent(self)
+        val.__mobj__parent(self)
         self.append(val)
       end
       self

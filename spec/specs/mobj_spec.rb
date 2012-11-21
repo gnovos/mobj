@@ -19,12 +19,22 @@ describe Mobj do
   end
 
   describe NilClass do
+    it "can chain methods when in null mode but still be nil/falsy" do
+      nil.null?.should be_false
+      nil.null!.null?.should be_true
+      nil.null?.should be_false
+      nil.null!.nil!.null?.should be_false
+
+      nil.null!.foo.bar.baz.should be_nil
+      expect { nil.foo }.to raise_exception
+    end
+
     it "can attempt otherwise provide values" do
       nil.inspect.should == "nil"
       nil.attempt.foo.should be_true
       nil.do?("right").foo.should == "right"
       nil.attempt({ foo: "right", bar: "wrong" }).foo.should == "right"
-      nil.try?({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
+      nil.try!({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
       nil.attempt({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
     end
   end
@@ -47,9 +57,18 @@ describe Mobj do
       o.if?.foo_true.then.bar.else.baz.should == "bar"
     end
 
+    it "can try?" do
+      "1.3".try?.to_f.should == 1.3
+      "1.3".try?.foo.should be_false
+
+      "1.3".try?.to_f.to_s.split('').join("-").should == "1-.-3"
+      var = nil
+      var.try?.foo.should be_nil
+      var.try?.foo.split('').join("-").should be_nil
+    end
+
     it "can attempt or otherwise provide values" do
 
-      "1.3".try?.to_f.should == 1.3
       "1.3".do?.to_z.should == "1.3"
 
       "1.3".if!.to_f.should == 1.3
@@ -70,11 +89,6 @@ describe Mobj do
       "foo".sym.should == :foo
       "".sym.should == :""
       1.sym.should == :"1"
-
-      nil.s.should == ""
-      "foo".s.should == "foo"
-      "".s.should == ""
-      1.s.should == "1"
     end
 
     it "can have parents and find it's root" do
@@ -82,43 +96,43 @@ describe Mobj do
       b = "b"
       c = "c"
 
-      c.mparent(b)
-      b.mparent(a)
+      c.__mobj__parent(b)
+      b.__mobj__parent(a)
 
-      a.mroot.should == a
-      b.mroot.should == a
-      c.mroot.should == a
+      a.__mobj__root.should == a
+      b.__mobj__root.should == a
+      c.__mobj__root.should == a
 
-      c.mparent.should == b
-      b.mparent.should == a
+      c.__mobj__parent.should == b
+      b.__mobj__parent.should == a
 
       d = { a: Object.new, b:[ 1, 2, { c: { d: [ {e: Object.new }, {e: Object.new} ] } } ] }
 
-      d[:a].mparent.should be_nil
-      d[:b].mparent.should be_nil
-      d[:b][2].mparent.should be_nil
-      d[:b][2][:c].mparent.should be_nil
-      d[:b][2][:c][:d].mparent.should be_nil
-      d[:b][2][:c][:d].first.mparent.should be_nil
-      d[:b][2][:c][:d].last.mparent.should be_nil
+      d[:a].__mobj__parent.should be_nil
+      d[:b].__mobj__parent.should be_nil
+      d[:b][2].__mobj__parent.should be_nil
+      d[:b][2][:c].__mobj__parent.should be_nil
+      d[:b][2][:c][:d].__mobj__parent.should be_nil
+      d[:b][2][:c][:d].first.__mobj__parent.should be_nil
+      d[:b][2][:c][:d].last.__mobj__parent.should be_nil
 
-      d.reparent
+      d.__mobj__reparent
 
-      d[:b][2][:c][:d].last.mparent.should == d[:b][2][:c][:d]
-      d[:b][2][:c][:d].first.mparent.should == d[:b][2][:c][:d]
-      d[:b][2][:c][:d].mparent.should == d[:b][2][:c]
-      d[:b][2][:c].mparent.should == d[:b][2]
-      d[:b][2].mparent.should == d[:b]
-      d[:b].mparent.should == d
-      d[:a].mparent.should == d
+      d[:b][2][:c][:d].last.__mobj__parent.should == d[:b][2][:c][:d]
+      d[:b][2][:c][:d].first.__mobj__parent.should == d[:b][2][:c][:d]
+      d[:b][2][:c][:d].__mobj__parent.should == d[:b][2][:c]
+      d[:b][2][:c].__mobj__parent.should == d[:b][2]
+      d[:b][2].__mobj__parent.should == d[:b]
+      d[:b].__mobj__parent.should == d
+      d[:a].__mobj__parent.should == d
 
-      d[:b][2][:c][:d].last.mroot.should == d
-      d[:b][2][:c][:d].first.mroot.should == d
-      d[:b][2][:c][:d].mroot.should == d
-      d[:b][2][:c].mroot.should == d
-      d[:b][2].mroot.should == d
-      d[:b].mroot.should == d
-      d[:a].mroot.should == d
+      d[:b][2][:c][:d].last.__mobj__root.should == d
+      d[:b][2][:c][:d].first.__mobj__root.should == d
+      d[:b][2][:c][:d].__mobj__root.should == d
+      d[:b][2][:c].__mobj__root.should == d
+      d[:b][2].__mobj__root.should == d
+      d[:b].__mobj__root.should == d
+      d[:a].__mobj__root.should == d
     end
   end
 
@@ -160,7 +174,7 @@ describe Mobj do
 
   describe Hash do
     it "can do cool things" do
-      hash = { :a => 'aaa', 'b' => :bbb }
+      hash = { :a => 'aaa', 'b' => :bbb, :zero => 0 }
       hash.a.should == 'aaa'
       hash.b.should == :bbb
 
@@ -174,6 +188,7 @@ describe Mobj do
 
       hash.a?.should be_true
       hash.b?.should be_true
+      hash.zero?.should be_true
       hash.c?.should be_false
 
       hash.a = 'new a'
@@ -183,7 +198,8 @@ describe Mobj do
       hash.should == {
           a: 'new a',
           'b' => nil,
-          c: 15
+          c: 15,
+          zero: 0
       }
 
       hash[:b].should be_nil
@@ -291,10 +307,10 @@ describe Mobj do
 
       ret = "b.employees".tokenize.walk(complex)
       ret.should == [{:empid=>0, :name=>"Joe"}, {:empid=>1, :name=>"Sally"}, {:empid=>0, :name=>"Wong"}, {:empid=>1, :name=>"Wright"}]
-      ret[0].mparent.mparent.should == { company: 0, employees: [ { empid: 0, name: "Joe" }, { empid: 1, name: "Sally" } ] }
-      ret[1].mparent.mparent.should == { company: 0, employees: [ { empid: 0, name: "Joe" }, { empid: 1, name: "Sally" } ] }
-      ret[2].mparent.mparent.should == { company: 1, employees: [ { empid: 0, name: "Wong"}, { empid: 1, name: "Wright"} ] }
-      ret[3].mparent.mparent.should == { company: 1, employees: [ { empid: 0, name: "Wong"}, { empid: 1, name: "Wright"} ] }
+      ret[0].__mobj__parent.__mobj__parent.should == { company: 0, employees: [ { empid: 0, name: "Joe" }, { empid: 1, name: "Sally" } ] }
+      ret[1].__mobj__parent.__mobj__parent.should == { company: 0, employees: [ { empid: 0, name: "Joe" }, { empid: 1, name: "Sally" } ] }
+      ret[2].__mobj__parent.__mobj__parent.should == { company: 1, employees: [ { empid: 0, name: "Wong"}, { empid: 1, name: "Wright"} ] }
+      ret[3].__mobj__parent.__mobj__parent.should == { company: 1, employees: [ { empid: 0, name: "Wong"}, { empid: 1, name: "Wright"} ] }
 
       "b.employees".walk(complex).should == ret
     end
@@ -313,7 +329,6 @@ describe Mobj do
 
       foo.should be_empty
       bar.should be_empty
-
     end
 
     it "can parse itself into path tokens" do
@@ -350,7 +365,7 @@ describe Mobj do
       ch.foo.should == "bar"
       ch['foo'].should == "bar"
       ch[:foo].should == "bar"
-      ch.foo.mparent.should == ch
+      ch.foo.__mobj__parent.should == ch
 
       ca[0] = "hello"
       ca[5..7] = "world"
@@ -360,7 +375,7 @@ describe Mobj do
       ca[6] = "world"
       ca[7] = "world"
 
-      ca.first.mparent.should == ca
+      ca.first.__mobj__parent.should == ca
     end
 
     it "can wrap nested arrays and hashes" do
@@ -375,11 +390,11 @@ describe Mobj do
       circle.bar.whiz.first.innera.should == 1
       circle.bar.whiz.last.innerc.should == 1
 
-      circle.mparent.should be_nil
-      circle.bar.mparent.should == circle
-      circle.bar.whiz.mparent.should == circle.bar
-      circle.bar.whiz.last.mparent.should == circle.bar.whiz
-      circle.bar.whiz.last.innerc.mparent.should == circle.bar.whiz.last
+      circle.__mobj__parent.should be_nil
+      circle.bar.__mobj__parent.should == circle
+      circle.bar.whiz.__mobj__parent.should == circle.bar
+      circle.bar.whiz.last.__mobj__parent.should == circle.bar.whiz
+      circle.bar.whiz.last.innerc.__mobj__parent.should == circle.bar.whiz.last
     end
   end
 end
