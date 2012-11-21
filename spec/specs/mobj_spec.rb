@@ -238,6 +238,7 @@ describe Mobj do
 
   describe Mobj::Token do
     it "can walk a tree" do
+
       obj = {
           a: [ "b", "c", "d"],
           b: [ { c: { d: "foundA" } }, { c: { d: "foundB" } } ],
@@ -341,7 +342,7 @@ describe Mobj do
     end
 
     it "can parse itself into path tokens" do
-      path = "a.b1|b2|~lit.c[0,0-0,0..0,0...0,0+]./de/.f&g.{{h}}.j,k,l./(m).|&\\{\\[/.n.!o.{{p.q}}.r&s|t,u.^.v"
+      path = "a.b1|b2|~lit.c[0, 0- 0, 0 . . 0,0...0, 0+]./de/.f&g.{{h}}.j,k,l./(m).|&\\{\\[/.n.!o.{{p.q}}.r&s|t,u.^.v"
 
       path.tokenize.to_s.should ==
           Mobj::Token.new(:root,

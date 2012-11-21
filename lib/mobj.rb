@@ -324,7 +324,7 @@ module Mobj
       lookup = /\{\{(?<lookup>.*?)\}\}/
       up = /(?<up>\^)/
       path = /(?<path>[^\.\[]+)/
-      indexes = /(?<indexes>[\d\+\.,-]+)/
+      indexes = /(?<indexes>[\d\+\.,\s-]+)/
 
       matcher = /#{lit}|#{regex}|#{lookup}|#{up}|#{path}(?:\[#{indexes}\])?/
 
@@ -351,7 +351,7 @@ module Mobj
 
           unless ands.size + ors.size + eachs.size > 3
             options = {}
-            index_matcher = /(?<low>\d+)(?:(?:\.\.(?<ex>\.)?|-?)(?<high>-?\d+|\+))?/
+            index_matcher = /\s*(?<low>\d+)\s*(?:(?:\.\s*\.\s*(?<ex>\.)?\s*|-?)\s*(?<high>-?\d+|\+))?\s*/
 
             options[:indexes] = match.indexes.matches(index_matcher).map do |index|
               if index.high?
