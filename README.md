@@ -151,7 +151,7 @@ hash.unknown?
 #=> True
 ```
 
-Matching stuff
+Matching stuff:
 
 ```ruby
 match = "Joe Bob".match(/(?<first_name>\w+) (?<first_name>)/)
