@@ -335,9 +335,7 @@ module Mobj
       matches
     end
 
-    def walk(obj)
-      tokenize.walk(obj)
-    end
+    def walk(obj) tokenize.walk(obj) end
 
     def tokenize
       tokens = []
@@ -361,9 +359,9 @@ module Mobj
         elsif match.up?
           tokens << Token.new(:up)
         elsif match.path?
-          eachs = match.path.split(",")
-          ors = match.path.split("|")
-          ands = match.path.split("&")
+          eachs = match.path.split(/\s*,\s*/)
+          ors = match.path.split(/\s*\|\s*/)
+          ands = match.path.split(/\s*\&\s*/)
           if eachs.size > 1
             tokens << Token.new(:each, eachs.map { |token| token.tokenize() })
           elsif ands.size > 1

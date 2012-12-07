@@ -378,15 +378,15 @@ describe Mobj do
 
       "name.first".walk(obj).should == "Joe"
 
-      "name.first,last".walk(obj).should == ["Joe", "Smith"]
+      "name.first , last".walk(obj).should == ["Joe", "Smith"]
 
       "ids[1, 3, 5..7, 9+]".walk(obj).should == [3, 16, 13, 100, 3, 104]
 
       "auth_tokens.token./^auth/.*to_i".walk(obj).should == [ 123456, 891011 ]
 
-      "auth_tokens.token.expire|date".walk(obj).should == [ "10-20-2012", "10-20-2013" ]
+      "auth_tokens.token.expire | date".walk(obj).should == [ "10-20-2012", "10-20-2013" ]
 
-      "/auth/.provider,token.auth|authentication_token|~N/A".walk(obj).should == ["N/A", "N/A", "123456", "891011"]
+      "/auth/.provider, token.auth | authentication_token|~N/A".walk(obj).should == ["N/A", "N/A", "123456", "891011"]
 
       "{{primary_key.path}}.id".walk(obj).should == [1, 2]
     end
