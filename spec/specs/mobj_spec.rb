@@ -382,6 +382,8 @@ describe Mobj do
 
       "name./\\w(\\w).*/".walk(obj).should == { "i" => "Joe", "a" => "Smith" }
 
+      "name./(?:(?<fn>fir)|(?<ln>las)).*/".walk(obj).should == { :fn => "Joe", :ln => "Smith" }
+
       "name.first , last".walk(obj).should == ["Joe", "Smith"]
 
       "ids[1, 3, 5..7, 9+]".walk(obj).should == [3, 16, 13, 100, 3, 104]

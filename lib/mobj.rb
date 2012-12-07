@@ -278,7 +278,13 @@ module Mobj
           if map.is_a?(Array)
             map << obj[key]
           else
-            map[m.captures.empty? ? key : m.captures.sequester] = obj[key]
+            named = m.to_hash.invert
+            name = if named.empty?
+              m.captures.empty? ? key : m.captures.sequester
+            else
+              named.find { |k, v| !k.nil? }.attempt(key).last
+            end
+            map[name] = obj[key]
           end
         }
 
@@ -313,7 +319,6 @@ module Mobj
                 @path.map { |token| token.walk(obj, root) }
               when :lookup
                 lookup = @path.walk(obj)
-                puts "lookup '#{lookup}':#{obj}:#{@path}"
                 if lookup.is_a?(Array)
                   lookup.flatten.map { |lu| lu.tokenize.walk(root) }.flatten(1)
                 else
