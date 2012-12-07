@@ -261,15 +261,27 @@ module Mobj
       end
     end
 
-
-
     def find(obj, match)
       if obj.is_a?(Array)
         obj.map do |child|
           find(child, match)
         end
       elsif obj.respond_to?(:keys)
-        obj.keys.map { |key| key if key.match(match) }.compact.map{|key| obj[key] }
+        found = obj.keys.each.with_object({}) { |key, fnd|
+          m = key.to_s.match(match)
+          fnd[key] = m if m
+        }
+
+        flat = found.values.flat_map(&:captures).empty?
+
+        found.each.with_object(flat ? [] : {}) { |(key, m), map|
+          if map.is_a?(Array)
+            map << obj[key]
+          else
+            map[m.captures.empty? ? key : m.captures.sequester] = obj[key]
+          end
+        }
+
       end
     end
 
