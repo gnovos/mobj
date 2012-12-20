@@ -214,6 +214,14 @@ describe Mobj do
       hash[:b].should be_nil
       hash['b'].should be_nil
       hash.b.should be_nil
+
+      hash.symvert.should == {a:"new a", "b"=>nil, zero:0, c:15}
+      hash.symvert(:to_s).should == {"a"=>"new a", "b"=>"", "zero"=>"0", "c"=>"15"}
+      hash.symvert(:to_sym).should == {a: :"new a", b: nil, zero: 0, c: 15}
+      hash.symvert(:sym).should == {a: :"new a", b: :"", zero: :"0", c: :"15"}
+      hash.symvert(:to_s, :sym).should == {"a"=>:"new a", "b"=>:"", "zero"=>:"0", "c"=>:"15"}
+      hash.symvert(proc { |k| "[#{k}]" }, proc { |v| "(#{v})" }).should == {"[a]"=>"(new a)", "[b]"=>"()", "[zero]"=>"(0)", "[c]"=>"(15)"}
+      hash.symvert(proc { |k,v| "[#{k}=#{v}]" }, proc { |k,v| "(#{k}=#{v})" }).should == {"[a=new a]"=>"(a=new a)", "[b=]"=>"(b=)", "[zero=0]"=>"(zero=0)", "[c=15]"=>"(c=15)"}
     end
   end
 

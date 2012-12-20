@@ -7,6 +7,7 @@ module Mobj
     end
     def null!() self end
     def nil!() self end
+    def itself() self end
   end
 
   class ::Fixnum
@@ -41,7 +42,7 @@ module Mobj
     end
     def attempt(value=:root)
       Forwarder.new do |name, *args, &block|
-        if self.methods(true).include? name
+        if self.methods(true).include? name ##//use respond to?
           self.__send__(name, *args, &block)
         elsif value.is_a?(Proc)
           value.call([name] + args, &block)
@@ -172,6 +173,33 @@ module Mobj
   end
 
   module HashEx
+
+    def symvert(key_converter = :itself, value_converter = key_converter)
+      each.with_object({}) do |(k,v),o|
+        key = if key_converter.is_a?(Proc)
+          key_converter.call(k, v)
+        elsif k.respond_to?(key_converter.sym)
+          k.__send__(key_converter.sym)
+        else
+          k
+        end
+
+        value = if value_converter.is_a?(Proc)
+          value_converter.arity == 1 ? value_converter.call(v) : value_converter.call(k, v)
+        elsif v.respond_to?(value_converter.sym)
+          v.__send__(value_converter.sym)
+        else
+          v
+        end
+
+        o[key] = value
+      end
+    end
+
+    def symvert!(key_converter = :itself, value_converter = key_converter)
+      replace(symvert(key_converter, value_converter))
+    end
+
     def method_missing(name, *args, &block)
       if name[-1] == '=' && args.size == 1
         key = name[0...-1].sym
