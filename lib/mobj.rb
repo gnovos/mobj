@@ -375,6 +375,10 @@ module Mobj
     end
   end
 
+  class ::Symbol
+    def walk(obj) to_s.walk(obj) end
+  end
+
   class ::String
 
     def matches(regexp)

@@ -392,6 +392,8 @@ describe Mobj do
           primary_key: { path: "auth_tokens.provider" }
       }
 
+      :name.walk(obj).should == { first:"Joe", last:"Smith" }
+
       "name.first".walk(obj).should == "Joe"
 
       "name./\\w\\w.*/".walk(obj).should == ["Joe", "Smith"]
