@@ -154,6 +154,14 @@ describe Mobj do
   end
 
   describe Array do
+
+    it "can sum and avg" do
+
+      [1.3,2,3,'4','five',nil].sum.should == 10.3
+      [1.5,2.5,4,'4','five',nil].avg.should == 2.0
+
+    end
+
     it "can select the first block that return non-nil" do
       count = 0
       [1,2,3,4,5].return_first { |i| count += 1; i == 3 ? "found" : nil }.should == "found"
