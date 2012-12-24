@@ -157,12 +157,12 @@ module Mobj
     alias includes? include?
     alias contains? include?
 
-    def sum(initial = 0.0, op = :+, &block)
+    def msum(initial = 0.0, op = :+, &block)
       map(&:to_f).inject(initial, block ? block : op)
     end
 
-    def avg(&block)
-       sum(&block) / size
+    def mavg(&block)
+       msum(&block) / size
     end
 
     def values() self end

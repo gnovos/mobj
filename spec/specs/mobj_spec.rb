@@ -157,8 +157,8 @@ describe Mobj do
 
     it "can sum and avg" do
 
-      [1.3,2,3,'4','five',nil].sum.should == 10.3
-      [1.5,2.5,4,'4','five',nil].avg.should == 2.0
+      [1.3,2,3,'4','five',nil].msum.should == 10.3
+      [1.5,2.5,4,'4','five',nil].mavg.should == 2.0
 
     end
 
