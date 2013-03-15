@@ -5,10 +5,10 @@ module Mobj
       klass = class << self; self end
       klass.superclass
     end
-    def null!(*args) self end
-    def nil!(*args) self end
+    def null!(*) self end
+    def nil!(*) self end
     def itself() self end
-    def alter(*args, &block) instance_exec(*args, &block) || self end
+    def alter(*args, &block) instance_exec(*args, &block) end
     alias_method :o!, :alter
 
   end
@@ -109,15 +109,15 @@ module Mobj
         file != __FILE__ || !(MOBJ_NULL_REGION_BEGIN..MOBJ_NULL_REGION_END).cover?(line.to_i)
       end
     end
-    def null?(*args)
+    def null?(*)
       @@null ||= nil
       @@null && @@null == __mobj__caller
     end
-    def null!(*args)
+    def null!(*)
       @@null = __mobj__caller
       self
     end
-    def nil!(*args)
+    def nil!(*)
       @@null = nil
       self
     end

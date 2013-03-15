@@ -53,7 +53,7 @@ describe Mobj do
     it "can be altered and replaced" do
       o = { foo: 'foo', bar: 'bar' }
       o.alter { self.foo }.should == 'foo'
-      o.alter {  }.should == o
+      o.alter {  }.should be_nil
       o.alter('val'){ |v| "#{v}=#{self.foo}" }.should == 'val=foo'
     end
 
