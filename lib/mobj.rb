@@ -5,10 +5,10 @@ module Mobj
       klass = class << self; self end
       klass.superclass
     end
-    def null!() self end
-    def nil!() self end
+    def null!(*args) self end
+    def nil!(*args) self end
     def itself() self end
-    def alter(*args, &block) block[*[self, *args]] || self; end
+    def alter(*args, &block) instance_exec(*args, &block) || self end
     alias_method :o!, :alter
 
   end
@@ -57,13 +57,13 @@ module Mobj
       end
     end
 
-    def try?(default=nil)
-      Forwarder.new do |name, *args, &block|
+    def try?(default=nil, &block)
+      Forwarder.new do |name, *args, &fblock|
         if methods(true).include?(name)
-          __send__(name, *args, &block)
+          __send__(name, *args, &fblock)
         elsif is_a?(Hash) && ki?(name)
           self[name]
-        end || default || nil.null!
+        end || (block ? instance_exec(*[*default], &block) : default) || nil.null!
       end
     end
 
@@ -109,15 +109,15 @@ module Mobj
         file != __FILE__ || !(MOBJ_NULL_REGION_BEGIN..MOBJ_NULL_REGION_END).cover?(line.to_i)
       end
     end
-    def null?()
+    def null?(*args)
       @@null ||= nil
       @@null && @@null == __mobj__caller
     end
-    def null!()
+    def null!(*args)
       @@null = __mobj__caller
       self
     end
-    def nil!
+    def nil!(*args)
       @@null = nil
       self
     end

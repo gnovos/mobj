@@ -50,6 +50,14 @@ describe Mobj do
 
   describe Object do
 
+    it "can be altered and replaced" do
+      o = { foo: 'foo', bar: 'bar' }
+      o.alter { self.foo }.should == 'foo'
+      o.alter {  }.should == o
+      o.alter('val'){ |v| "#{v}=#{self.foo}" }.should == 'val=foo'
+    end
+
+
     it "can when" do
       o = Object.new
       def o.foo_true() true end
@@ -80,6 +88,7 @@ describe Mobj do
       hash.foo.try?.bar.should == 'baz'
       hash.foo.try?.baz.should be_false
       hash.foo.try?('def').baz.should == 'def'
+      hash.foo.try? { self.bar }.biz.should == 'baz'
 
     end
 
