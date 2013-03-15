@@ -41,9 +41,9 @@ describe Mobj do
     it "can attempt otherwise provide values" do
       nil.inspect.should == "nil"
       nil.attempt.foo.should be_true
-      nil.do?("right").foo.should == "right"
+      nil.attempt("right").foo.should == "right"
       nil.attempt({ foo: "right", bar: "wrong" }).foo.should == "right"
-      nil.try!({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
+      nil.attempt({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
       nil.attempt({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
     end
   end
@@ -74,23 +74,31 @@ describe Mobj do
       var = nil
       var.try?.foo.should be_nil
       var.try?.foo.split('').join("-").should be_nil
+
+      hash = { foo: { bar:'baz' } }
+
+      hash.foo.try?.bar.should == 'baz'
+      hash.foo.try?.baz.should be_false
+      hash.foo.try?('def').baz.should == 'def'
+
     end
 
     it "can attempt or otherwise provide values" do
 
-      "1.3".do?.to_z.should == "1.3"
+      "1.3".attempt.to_z.should == "1.3"
+      "1.3".attempt.to_f.should == 1.3
 
-      "1.3".if!.to_f.should == 1.3
-      "some string".if!.to_s.should == "some string"
-      "some string".if!.to_z.should == "some string"
+      "some string".attempt.to_s.should == "some string"
+      "some string".attempt.to_z.should == "some string"
 
       "some string".attempt("value").to_s.should == "some string"
       "nil".attempt("other value").unknown_method.should == "other value"
 
       "some string".attempt("value").foo.should == "value"
       "some string".attempt({ foo: "right", bar: "wrong" }).foo.should == "right"
-      "some string".does?({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
+      "some string".attempt({ foo: proc { |var| "right #{var}" }, bar: "wrong" }).foo("selection").should == "right selection"
       "some string".attempt({ foo: "right", bar: "right" }).baz.should == { foo: "right", bar: "right" }
+
     end
 
     it "Can symbolize and s stuff" do
@@ -199,6 +207,9 @@ describe Mobj do
       hash['a'].should == 'aaa'
       hash[:b].should == :bbb
       hash['b'].should == :bbb
+      hash.c.should be_nil
+
+      expect { hash.c! }.to raise_exception
 
       hash[5, nil, :foo, 'b'].should == :bbb
       hash[5, nil, :foo, :a].should == 'aaa'
@@ -223,6 +234,10 @@ describe Mobj do
       hash['b'].should be_nil
       hash.b.should be_nil
 
+      hash.c { |val| val + 10 }.should == 25
+      hash.c? { |val| "v:#{val}" }.should == 'v:true'
+      hash.g? { |val| "v:#{val}" }.should == 'v:false'
+
       hash.symvert.should == {a:"new a", "b"=>nil, zero:0, c:15}
       hash.symvert(:to_s).should == {"a"=>"new a", "b"=>"", "zero"=>"0", "c"=>"15"}
       hash.symvert(:to_sym).should == {a: :"new a", b: nil, zero: 0, c: 15}
@@ -230,6 +245,15 @@ describe Mobj do
       hash.symvert(:to_s, :sym).should == {"a"=>:"new a", "b"=>:"", "zero"=>:"0", "c"=>:"15"}
       hash.symvert(proc { |k| "[#{k}]" }, proc { |v| "(#{v})" }).should == {"[a]"=>"(new a)", "[b]"=>"()", "[zero]"=>"(0)", "[c]"=>"(15)"}
       hash.symvert(proc { |k,v| "[#{k}=#{v}]" }, proc { |k,v| "(#{k}=#{v})" }).should == {"[a=new a]"=>"(a=new a)", "[b=]"=>"(b=)", "[zero=0]"=>"(zero=0)", "[c=15]"=>"(c=15)"}
+
+      hash.h { |val| val.nil? }.should be_true
+      hash.h('default').should == 'default'
+      hash.h.should be_nil
+      hash.h!('saved default').should == 'saved default'
+      hash.h.should == 'saved default'
+      hash.i!('saved default') { |i| "#{i} from block" }.should == 'saved default from block'
+      hash.i.should == 'saved default from block'
+
     end
   end
 

@@ -8,6 +8,9 @@ module Mobj
     def null!() self end
     def nil!() self end
     def itself() self end
+    def alter(*args, &block) block[*[self, *args]] || self; end
+    alias_method :o!, :alter
+
   end
 
   class ::Fixnum
@@ -46,23 +49,25 @@ module Mobj
           self.__send__(name, *args, &block)
         elsif value.is_a?(Proc)
           value.call([name] + args, &block)
-        elsif value.is_a?(Hash) && value.key?(name)
+        elsif value.is_a?(Hash) && value.ki?(name)
           value[name].when.is_a?(Proc).call(*args, &block)
         else
           value == :root ? self : value
         end
       end
     end
-    alias_method :try!, :attempt
-    alias_method :do?, :attempt
-    alias_method :does?, :attempt
-    alias_method :if!, :attempt
 
-    def try?()
+    def try?(default=nil)
       Forwarder.new do |name, *args, &block|
-        methods(true).include?(name) ? __send__(name, *args, &block) : nil.null!
+        if methods(true).include?(name)
+          __send__(name, *args, &block)
+        elsif is_a?(Hash) && ki?(name)
+          self[name]
+        end || default || nil.null!
       end
     end
+
+    alias_method :ifnil, :try?
 
     def when
       Forwarder.new do |name, *args, &block|
@@ -134,17 +139,13 @@ module Mobj
           self.__send__(name, *args, &block)
         elsif value.is_a?(Proc)
           value.call([name] + args, &block)
-        elsif value.is_a?(Hash) && value.key?(name)
+        elsif value.is_a?(Hash) && value.ki?(name)
           value[name].when.is_a?(Proc).call(*args, &block)
         else
           value
         end
       end
     end
-    alias_method :try!, :attempt
-    alias_method :do?, :attempt
-    alias_method :does?, :attempt
-    alias_method :if!, :attempt
   end
 
   class ::Class
@@ -156,6 +157,9 @@ module Mobj
   class ::Array
     alias includes? include?
     alias contains? include?
+
+    def unempty?() !empty? end
+    alias_method :notempty?, :unempty?
 
     def msum(initial = 0.0, op = :+, &block)
       map(&:to_f).inject(initial, block ? block : op)
@@ -181,6 +185,14 @@ module Mobj
   end
 
   module HashEx
+
+    def ki(name)
+      name.to_s[/(.*?)[?!=]?$/, 1]
+    end
+
+    def ki?(name)
+      [name.sym, name.to_s, ki(name).sym, ki(name).to_s].any?{ |k| key?(k) }
+    end
 
     def symvert(key_converter = :itself, value_converter = key_converter)
       each.with_object({}) do |(k,v),o|
@@ -209,17 +221,26 @@ module Mobj
     end
 
     def method_missing(name, *args, &block)
-      if name[-1] == '=' && args.size == 1
+      value = if name[-1] == '=' && args.size == 1
         key = name[0...-1].sym
         key = key.to_s if key?(key.to_s)
-        return self[key] = args.sequester
+        self[key] = args.sequester
       elsif name[-1] == '?'
         key = name[0...-1].sym
-        return !!self[key, key.to_s]
-      elsif key?(name.sym) || key?(name.to_s)
-        return self[name.sym] || self[name.to_s]
+        !!self[key, key.to_s]
+      elsif name[-1] == '!'
+        key = name[0...-1].sym
+        val = self[key.sym] || self[key.to_s]
+        if !val && (block || args.unempty?)
+          self[key] = val = (block ? block.call(*args) : args.sequester)
+        end
+        super unless val
+      else
+        self[name.sym] || self[name.to_s]
       end
-      super
+      value ||= args.sequester unless args.empty?
+
+      return block ? block[value] : value
     end
   end
 
@@ -229,7 +250,7 @@ module Mobj
     alias :mlookup :[]
     alias :mdef :default
     def [](*fkeys)
-      fkeys.map { |key| mlookup(key) || fetch(key.sym) { fetch(key.to_s) { mdef(key) }  } }.sequester
+      fkeys.map { |key| mlookup(key) || fetch(key.sym) { fetch(key.to_s) { fetch(ki(key).sym) { fetch(ki(key).to_s) { mdef(key) }}}}}.sequester
     end
   end
 
