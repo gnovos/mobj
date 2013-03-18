@@ -156,7 +156,7 @@ Matching stuff:
 ```ruby
 match = "Joe Bob".match(/(?<first_name>\w+) (?<first_name>)/)
 
-match.to_hash
+match.to_h
 #=> Creates a hash of named captures
 
 match.first_name if match.first_name?

@@ -268,7 +268,7 @@ describe Mobj do
 
   describe MatchData do
     it "can hash out named captures" do
-      "abc".match(/(?<a>.)(?<b>.)(?<c>.)(?<d>.)?/).to_hash.should == { a: 'a', b: 'b', c: 'c', d: nil }
+      "abc".match(/(?<a>.)(?<b>.)(?<c>.)(?<d>.)?/).to_h.should == { a: 'a', b: 'b', c: 'c', d: nil }
     end
 
     it "can get named captures via method call" do

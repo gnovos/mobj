@@ -255,15 +255,15 @@ module Mobj
   end
 
   module MatchEx
-    def to_hash
+    def to_h
       Hash[ names.map(&:sym).zip( captures ) ]
     end
 
     def method_missing(name, *args, &block)
       if name[-1] == '?' && names.includes?(name[0...-1])
-        return to_hash[name[0...-1].sym]
+        return to_h[name[0...-1].sym]
       elsif names.includes?(name.to_s)
-        return to_hash[name.sym]
+        return to_h[name.sym]
       end
       super
     end
@@ -335,7 +335,7 @@ module Mobj
           if map.is_a?(Array)
             map << obj[key]
           else
-            named = m.to_hash.invert
+            named = m.to_h.invert
             name = if named.empty?
               m.captures.empty? ? key : m.captures.sequester
             else
