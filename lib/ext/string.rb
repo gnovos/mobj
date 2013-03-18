@@ -33,23 +33,23 @@ module Mobj
 
       matches(matcher) do |match|
         if match.literal?
-          tokens << Token.new(:literal, match.literal)
+          tokens << Mobj::Token.new(:literal, match.literal)
         elsif match.lookup?
-          tokens << Token.new(:lookup, match.lookup.tokenize)
+          tokens << Mobj::Token.new(:lookup, match.lookup.tokenize)
         elsif match.regex?
-          tokens << Token.new(:regex, Regexp.new(match.regex))
+          tokens << Mobj::Token.new(:regex, Regexp.new(match.regex))
         elsif match.up?
-          tokens << Token.new(:up)
+          tokens << Mobj::Token.new(:up)
         elsif match.path?
           eachs = match.path.split(/\s*,\s*/)
           ors  = match.path.split(/\s*\|\s*/)
           ands = match.path.split(/\s*\&\s*/)
           if eachs.size > 1
-            tokens << Token.new(:each, eachs.map { |token| token.tokenize() })
+            tokens << Mobj::Token.new(:each, eachs.map { |token| token.tokenize() })
           elsif ands.size > 1
-            tokens << Token.new(:all, ands.map { |token| token.tokenize() })
+            tokens << Mobj::Token.new(:all, ands.map { |token| token.tokenize() })
           elsif ors.size > 1
-            tokens << Token.new(:any, ors.map { |token| token.tokenize() })
+            tokens << Mobj::Token.new(:any, ors.map { |token| token.tokenize() })
           end
 
           unless ands.size + ors.size + eachs.size > 3
@@ -65,15 +65,15 @@ module Mobj
             end if match.indexes?
 
             if match.path[0] == '!'
-              tokens << Token.new(:inverse, Token.new(:path, match.path[1..-1].sym, options))
+              tokens << Mobj::Token.new(:inverse, Token.new(:path, match.path[1..-1].sym, options))
             else
-              tokens << Token.new(:path, match.path.sym, options)
+              tokens << Mobj::Token.new(:path, match.path.sym, options)
             end
           end
         end
       end
 
-      tokens.size == 1 ? tokens.first : Token.new(:root, tokens)
+      tokens.size == 1 ? tokens.first : Mobj::Token.new(:root, tokens)
     end
   end
 

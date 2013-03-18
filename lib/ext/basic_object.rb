@@ -20,11 +20,11 @@ module Mobj
       self
     end
 
-    def alter(*args, &block)
+    def wrap(*args, &block)
       instance_exec(*args, &block)
     end
 
-    alias_method :o!, :alter
+    alias_method :alter, :wrap
 
   end
 

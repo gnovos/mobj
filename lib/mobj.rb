@@ -1,4 +1,7 @@
-Dir["#{File.dirname(__FILE__)}/ext/*.rb"].each { |f| puts f; require f }
+Dir["#{File.dirname(__FILE__)}/ext/*.rb"].each do |f|
+  exclude = ENV['MOBJ_EXCLUDE']
+  require f unless (exclude && f.match(exclude))
+end
 
 module Mobj
 
