@@ -2,7 +2,52 @@ require 'mobj'
 
 module Mobj
 
+  ANSI = {
+      colors: {
+          k: 0, #:black,
+          r: 1, #:red,
+          g: 2, #:green,
+          y: 3, #:yellow,
+          b: 4, #:blue,
+          m: 5, #:magenta,
+          c: 6, #:cyan,
+          w: 7 #:white,
+      },
+      options: {
+          #:'*' => 90, #:bright,
+          #:'^' => 90, #:bright,
+          :'!' => 1, #:bold,
+          B: 1, #:bold,
+          f: 2, #:faint,
+          i: 3, #:italics,
+          u: 4, #:underline,
+          _: 4, #:underline,
+          x: 5, #:blink,
+          F: 6, #:blink_fast,
+          U: 21 #:double_underline
+      }
+  }
+
   class ::String
+
+    def cfmt
+      colors = ANSI.colors.keys.join
+      opts   = ANSI.options.keys.join
+      formatted = self
+      matches(/\{(?<color>[#{colors}]?)(?<opts>[#{opts}*^]*)\|(?<str>.*?)\}/).each do |m|
+        opts = m.opts.split(//).map(&:sym)
+        bright = (opts.delete(:'*') || opts.delete(:'^')) ? 90 : 30
+        codes = [(ANSI.colors[m.color].to_i + bright)] + ANSI.options.values_at(*opts).compact
+        formatted = formatted.sub(m[0], "\033[#{codes.join(';')}m#{m.str}\033[m")
+      end
+
+      formatted
+    end
+    alias_method :c!, :cfmt
+
+    def <(*args)
+      self.cfmt.%(*args)
+    end
 
     def matches(regexp)
       start = 0

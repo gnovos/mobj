@@ -35,6 +35,8 @@ module Mobj
       each { |item| break if (returned = block.call(item)) }
       returned
     end
+
+    alias_method :earliest, :return_first
   end
 
 end

@@ -1,3 +1,5 @@
+require "#{File.dirname(__FILE__)}/object.rb"
+
 module Mobj
 
   module HashEx
