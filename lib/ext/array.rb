@@ -11,7 +11,11 @@ module Mobj
     alias_method :notempty?, :unempty?
 
     def msum(initial = 0.0, op = :+, &block)
-      map(&:to_f).inject(initial, block ? block : op)
+      if block
+        inject(initial) { |m, val| m.send(op, block[val]) }
+      else
+        map(&:to_f).inject(initial, op)
+      end
     end
 
     def mavg(&block)
