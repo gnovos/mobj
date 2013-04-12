@@ -22,6 +22,11 @@ module Mobj
       msum(&block) / size
     end
 
+    def mmid(&sorter)
+      sorted = sort(&sorter)
+      length.odd? ? sorted[length / 2] : (sorted[length/2 - 1] + sorted[length/2]).to_f / 2
+    end
+
     def values()
       self
     end
