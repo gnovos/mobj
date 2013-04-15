@@ -4,7 +4,13 @@ module Mobj
     alias responds_to? respond_to?
 
     def sym()
-      respond_to?(:to_sym) ? to_sym : to_s.to_sym
+      if is_a?(Symbol)
+        self
+      elsif respond_to?(:to_sym)
+        to_sym
+      else
+        to_s.to_sym
+      end
     end
 
     def __mobj__root()

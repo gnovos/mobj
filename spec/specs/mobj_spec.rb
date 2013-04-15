@@ -2,6 +2,18 @@ require 'spec_helper'
 
 describe Mobj do
 
+  describe ::Symbol do
+    it "can act like a string" do
+      :"0x1a".hex.should == 26
+    end
+
+    it "can sym" do
+      :foo.sym.should == :foo
+    end
+
+  end
+
+
   describe ::Float do
     it "can delimit" do
       1234567890.234.delimit.should == "1,234,567,890.234"
