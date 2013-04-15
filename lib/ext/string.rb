@@ -45,7 +45,7 @@ module Mobj
     end
     alias_method :c!, :cfmt
 
-    def <(*args)
+    def &(*args)
       self.cfmt.%(*args)
     end
 
