@@ -72,6 +72,13 @@ module Mobj
     def [](*fkeys)
       fkeys.map { |key| mlookup(key) || mfetch(key.sym) { mfetch(key.to_s) { mfetch(ki(key).sym) { mfetch(ki(key).to_s) { mdef(key) } } } } }.sequester
     end
+
+    def sym(recurse=false)
+      each.with_object({}) do |(key, value), o|
+        o[key.sym] = recurse ? value.sym : value
+      end
+    end
+
   end
 
 end

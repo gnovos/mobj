@@ -46,6 +46,24 @@ module Mobj
     end
 
     alias_method :earliest, :return_first
+
+    def sym
+      map(&:sym)
+    end
+
+    def meach(*args, &block)
+      if block
+        map { |item| instance_exec(item, *args, &block) }
+      elsif args.size == 1
+        map(&args.first.sym)
+      else
+        #args.each.with_object({}) do |action, o|
+        #  o[action.sym] = map(&action.sym)
+        #end
+        method = args.shift
+        map { |item| item.send(method, *args) }
+      end
+    end
   end
 
 end

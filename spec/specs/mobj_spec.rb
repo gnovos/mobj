@@ -216,6 +216,20 @@ describe Mobj do
 
       [[]].sequester.should == []
     end
+
+    it "can sym" do
+      [1, 2, 'a', :b].sym.should == [:'1', :'2', :a, :b]
+    end
+
+    it "can meach" do
+
+      ['a', 'b', 'c'].meach(:sym).should == [:a, :b, :c]
+      [1.002, 1.345, 23.99766].meach(2, &:round).should == [1.0, 1.35, 24.0]
+
+      [1.002, 1.345, 23.99766].meach(:round, 2).should == [1.0, 1.35, 24.0]
+
+    end
+
   end
 
   describe Hash do

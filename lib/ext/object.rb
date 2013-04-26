@@ -3,6 +3,10 @@ module Mobj
   class ::Object
     alias responds_to? respond_to?
 
+    def rand?
+      rand(1000000).odd?
+    end
+
     def sym()
       if respond_to?(:to_sym)
         to_sym
