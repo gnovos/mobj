@@ -1,7 +1,14 @@
 module Mobj
 
   class ::Object
-    alias responds_to? respond_to?
+    alias_method :responds_to?, :respond_to?
+
+    def i!() respond_to?(:to_i) ? to_i : to_s.to_i end
+    def f!() respond_to?(:to_f) ? to_f : to_s.to_f end
+    def z?() respond_to?(:zero?) ? zero? : f!.zero? end
+    def zeno!() z? ? 1 : self end
+
+    alias_method :n?, :nil?
 
     def rand?
       rand(1000000).odd?

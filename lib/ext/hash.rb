@@ -65,9 +65,9 @@ module Mobj
   class ::Hash
     include HashEx
 
-    alias :mlookup :[]
-    alias :mdef :default
-    alias :mfetch :fetch
+    alias_method :mlookup, :[]
+    alias_method :mdef, :default
+    alias_method :mfetch, :fetch
 
     def [](*fkeys)
       fkeys.map { |key| mlookup(key) || mfetch(key.sym) { mfetch(key.to_s) { mfetch(ki(key).sym) { mfetch(ki(key).to_s) { mdef(key) } } } } }.sequester

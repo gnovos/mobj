@@ -10,6 +10,10 @@ module Mobj
       end
     end
 
+    def zero?
+      true
+    end
+
     def null?(*)
       @@null ||= nil
       @@null && @@null == __mobj__caller

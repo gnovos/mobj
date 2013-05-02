@@ -1,8 +1,8 @@
 module Mobj
 
   class ::Array
-    alias includes? include?
-    alias contains? include?
+    alias_method :includes?, :include?
+    alias_method :contains?, :include?
 
     def unempty?()
       !empty?
