@@ -3,10 +3,10 @@ module Mobj
   class ::Object
     alias_method :responds_to?, :respond_to?
 
-    def i!() respond_to?(:to_i) ? to_i : to_s.to_i end
-    def f!() respond_to?(:to_f) ? to_f : to_s.to_f end
-    def z?() respond_to?(:zero?) ? zero? : f!.zero? end
-    def zeno!() z? ? 1 : self end
+    def i!() to_s.to_i end
+    def f!() to_s.to_f end
+    def z0?() respond_to?(:zero?) ? zero? : f!.zero? end
+    def zeno!() z0? ? 1.0 : self end
 
     alias_method :n?, :nil?
 
