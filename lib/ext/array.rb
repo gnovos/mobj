@@ -14,7 +14,7 @@ module Mobj
       if block
         inject(initial) { |m, val| m.send(op, block[val]) }
       else
-        map(&:to_f).inject(initial, op)
+        map(&:f!).inject(initial, op)
       end
     end
 
@@ -24,7 +24,7 @@ module Mobj
 
     def mmid(&sorter)
       sorted = sort(&sorter)
-      length.odd? ? sorted[length / 2] : (sorted[length/2 - 1] + sorted[length/2]).to_f / 2
+      length.odd? ? sorted[length / 2].f! : (sorted[length/2 - 1].f! + sorted[length/2].f!).f! / 2
     end
 
     def values()
