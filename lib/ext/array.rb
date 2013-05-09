@@ -47,7 +47,7 @@ module Mobj
 
     alias_method :earliest, :return_first
 
-    def sym
+    def msym
       map(&:sym)
     end
 

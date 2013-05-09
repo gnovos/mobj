@@ -217,8 +217,8 @@ describe Mobj do
       [[]].sequester.should == []
     end
 
-    it "can sym" do
-      [1, 2, 'a', :b].sym.should == [:'1', :'2', :a, :b]
+    it "can msym" do
+      [1, 2, 'a', :b].msym.should == [:'1', :'2', :a, :b]
     end
 
     it "can meach" do
