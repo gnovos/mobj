@@ -43,7 +43,7 @@ module Mobj
         path.map { |pth| obj[pth.sym] }
       elsif path[0] == '*' && obj.respond_to?(path[1..-1].sym)
         obj.__send__(path[1..-1].sym)
-      elsif obj.respond_to? :[]
+      elsif obj.respond_to?(:[]) && (obj.is_a?(Hash) || path.to_s =~ /[0-9.-]+/)
         if obj.is_a?(Hash)
           obj[path.sym]
         else

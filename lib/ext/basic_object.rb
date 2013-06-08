@@ -26,6 +26,14 @@ module Mobj
 
     alias_method :alter, :wrap
 
+    def tru?(t=true, _=nil, &block)
+      block ? instance_exec(t, &block) : t
+    end
+
+    def fals?(*)
+      nil
+    end
+
   end
 
 

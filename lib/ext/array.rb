@@ -47,8 +47,16 @@ module Mobj
 
     alias_method :earliest, :return_first
 
-    def msym
-      map(&:sym)
+    def msym() map(&:sym) end
+
+    def apply(to)
+      map do |m|
+        if m.is_a?(Symbol)
+          to.send(m)
+        else
+          m.to_s.walk(to)
+        end
+      end
     end
 
     def meach(*args, &block)

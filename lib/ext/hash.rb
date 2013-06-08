@@ -4,6 +4,12 @@ module Mobj
 
   module HashEx
 
+    def apply!(obj)
+      map do |key, value|
+        obj.send(key, *value)
+      end
+    end
+
     def ki(name)
       name.to_s[/(.*?)[?!=]?$/, 1]
     end

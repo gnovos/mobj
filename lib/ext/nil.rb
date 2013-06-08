@@ -14,6 +14,18 @@ module Mobj
       true
     end
 
+    def tru?(_=nil, f=nil, &block)
+      f
+    end
+
+    def fals?(val=nil, &block)
+      if block
+        block.call(val)
+      else
+        val
+      end
+    end
+
     def null?(*)
       @@null ||= nil
       @@null && @@null == __mobj__caller
