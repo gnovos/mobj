@@ -72,6 +72,20 @@ module Mobj
         map { |item| item.send(method, *args) }
       end
     end
+
+    def mall?(op, &block)
+      if op
+        all? { |item| item.send(op) }
+      elsif block
+        all? { |item| item.instance_exec(item, &block) }
+      else
+        all? { |item| item }
+      end
+    end
+
+    def hmap(&block)
+      each.with_object({}, &block)
+    end
   end
 
 end

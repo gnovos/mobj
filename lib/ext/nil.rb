@@ -26,6 +26,9 @@ module Mobj
       end
     end
 
+    def iff?(_=nil)
+    end
+
     def null?(*)
       @@null ||= nil
       @@null && @@null == __mobj__caller

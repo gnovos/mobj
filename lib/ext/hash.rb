@@ -66,6 +66,10 @@ module Mobj
 
       return block ? block[value] : value
     end
+
+    def denil!
+      reject!{ |k, v| k.nil? || v.nil? }
+    end
   end
 
   class ::Hash

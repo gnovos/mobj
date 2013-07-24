@@ -3,8 +3,8 @@ module Mobj
   class ::Object
     alias_method :responds_to?, :respond_to?
 
-    def i!() to_s.to_i end
-    def f!() to_s.to_f end
+    def i!() to_s.scan(/[\d\.]+/).join.to_i end #xxx strip out junk?
+    def f!() to_s.scan(/[\d\.]+/).join.to_f end
     def z0?() respond_to?(:zero?) ? zero? : f!.zero? end
     def zeno!() z0? ? 1.0 : self end
 
@@ -98,6 +98,11 @@ module Mobj
     end
 
     alias_method :if?, :when
+
+    def iff?(value = nil, &block)
+      block ? instance_exec(value, &block) : value
+    end
+
   end
 
 end
