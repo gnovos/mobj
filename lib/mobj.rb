@@ -45,7 +45,7 @@ module Mobj
         path.map { |pth| obj[pth.sym] }
       elsif path[0] == '*' && obj.respond_to?(path[1..-1].sym)
         obj.__send__(path[1..-1].sym)
-      elsif obj.respond_to?(:[]) && (obj.is_a?(Hash) || path.to_s =~ /[0-9.-]+/)
+      elsif obj.respond_to?(:[]) && (obj.h? || path.to_s =~ /[0-9.-]+/)
         if obj.h?
           obj[path.sym]
         else
@@ -59,7 +59,7 @@ module Mobj
     end
 
     def find(obj, match)
-      if obj.is_a?(Array)
+      if obj.a?
         obj.map do |child|
           find(child, match)
         end
@@ -72,7 +72,7 @@ module Mobj
         flat = found.values.flat_map(&:captures).empty?
 
         found.each.with_object(flat ? [] : {}) { |(key, m), map|
-          if map.is_a?(Array)
+          if map.a?
             map << obj[key]
           else
             named = m.to_h.invert
@@ -104,7 +104,7 @@ module Mobj
                   obj.__mobj__parent
                 end
               when :any
-                if obj.is_a?(Array)
+                if obj.a?
                   obj.map { |o| walk(o, root) }
                 else
                   @path.return_first { |token| token.walk(obj, root) }
@@ -116,7 +116,7 @@ module Mobj
                 @path.map { |token| token.walk(obj, root) }
               when :lookup
                 lookup = @path.walk(obj)
-                if lookup.is_a?(Array)
+                if lookup.a?
                   lookup.flatten.map { |lu| lu.tokenize.walk(root) }.flatten(1)
                 else
                   lookup.tokenize.walk(root)
@@ -128,7 +128,7 @@ module Mobj
                 while (path = tree.shift)
                   obj = path.walk(obj)
                 end
-                obj.is_a?(Array) ? obj.flatten : obj
+                obj.a? ? obj.flatten : obj
             end
 
       val = @options[:indexes] ? val.values_at(*@options[:indexes]) : val
@@ -138,13 +138,13 @@ module Mobj
 
   class Circle
     def self.wrap!(wrapped)
-      return wrapped if wrapped.is_a?(CircleHash) || wrapped.is_a?(CircleRay)
+      return wrapped if wrapped.a?(CircleHash) || wrapped.a?(CircleRay)
 
-      if wrapped.is_a?(Array)
+      if wrapped.a?
         circle = CircleRay.new
         wrapped.each_with_index { |item, i| circle[i] = wrap!(item) }
         circle
-      elsif wrapped.is_a?(Hash)
+      elsif wrapped.h?
         circle = CircleHash.new
         wrapped.each_pair { |key, val| circle[key] = wrap!(val) }
         circle

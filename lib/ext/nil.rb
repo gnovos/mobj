@@ -66,10 +66,10 @@ module Mobj
       Forwarder.new do |name, *args, &block|
         if self.methods(true).include? name
           self.__send__(name, *args, &block)
-        elsif value.is_a?(Proc)
+        elsif value.p?
           value.call([name] + args, &block)
-        elsif value.is_a?(Hash) && value.ki?(name)
-          value[name].when.is_a?(Proc).call(*args, &block)
+        elsif value.h? && value.ki?(name)
+          value[name].when.p?.call(*args, &block)
         else
           value
         end

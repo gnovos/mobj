@@ -57,9 +57,9 @@ module Mobj
     def s!() to_s end
     def zeno!() z0? ? 1.0 : self end
 
-    def u!(*args)
+    def up!(*args)
       if a?
-        each { |i| i.u!(*args) }
+        each { |i| i.up!(*args) }
       else
         if responds_to_all? :assign_attributes, :save
           args.select(&:h?).each do |arg|
@@ -111,10 +111,10 @@ module Mobj
       Forwarder.new do |name, *args, &block|
         if self.methods(true).include? name ##//use respond to?
           self.__send__(name, *args, &block)
-        elsif value.is_a?(Proc)
+        elsif value.p?
           value.call([name] + args, &block)
-        elsif value.is_a?(Hash) && value.ki?(name)
-          value[name].when.is_a?(Proc).call(*args, &block)
+        elsif value.h? && value.ki?(name)
+          value[name].when.p?.call(*args, &block)
         else
           value == :root ? self : value
         end
@@ -125,7 +125,7 @@ module Mobj
       Forwarder.new do |name, *args, &fblock|
         if methods(true).include?(name)
           __send__(name, *args, &fblock)
-        elsif is_a?(Hash) && ki?(name)
+        elsif h? && ki?(name)
           self[name]
         end || (block ? instance_exec(*[*default], &block) : default) || nil.null!
       end

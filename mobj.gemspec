@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name         = 'mobj'
-  s.version      = '3.2.0'
+  s.version      = '3.2.1'
   s.author       = 'Mason Glaves'
   s.email        = 'mobj@chipped.net'
   s.homepage     = 'https://github.com/gnovos/mobj'

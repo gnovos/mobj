@@ -27,7 +27,7 @@ module Mobj
 
     def symvert(key_converter = :itself, value_converter = key_converter)
       each.with_object({}) do |(k, v), o|
-        key = if key_converter.is_a?(Proc)
+        key = if key_converter.p?
           key_converter.call(k, v)
         elsif k.respond_to?(key_converter.sym)
           k.__send__(key_converter.sym)
@@ -35,7 +35,7 @@ module Mobj
           k
         end
 
-        value = if value_converter.is_a?(Proc)
+        value = if value_converter.p?
           value_converter.arity == 1 ? value_converter.call(v) : value_converter.call(k, v)
         elsif v.respond_to?(value_converter.sym)
           v.__send__(value_converter.sym)
