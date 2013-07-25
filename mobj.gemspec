@@ -1,9 +1,11 @@
 Gem::Specification.new do |s|
   s.name         = 'mobj'
-  s.version      = '3.2.1'
+  s.version      = '3.2.2'
   s.author       = 'Mason Glaves'
   s.email        = 'mobj@chipped.net'
   s.homepage     = 'https://github.com/gnovos/mobj'
+
+  s.licenses     = 'all of them'
 
   s.files        = Dir['lib/**/*.rb', '*.{md,rdoc,txt}']
   s.add_development_dependency 'rspec'
