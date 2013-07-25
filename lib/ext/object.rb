@@ -42,12 +42,12 @@ module Mobj
     def h?() a? Hash end
     def c?() a? Array, Hash end
 
-    def x?() a? NilClass, FalseClass end
+    def _?() a? NilClass, FalseClass end
 
     def z0?() respond_to?(:zero?) ? zero? : f!.zero? end
 
     def un?()
-      x? || (s? && s !~ /\S/) || (c? && mt?) || (n? && z0?)
+      _? || (s? && s !~ /\S/) || (c? && mt?) || (n? && z0?)
     end
 
     def o?() !un? end
@@ -133,25 +133,53 @@ module Mobj
 
     alias_method :ifnil, :try?
 
-    def when
+    def when(val=:noval)
       iam = self
+
+      return val == self ? self : Forwarder.new do |name, *args, &block|
+        iam.define_singleton_method(:else) { |*vars| self }
+        iam
+      end if val != :noval
+
       Forwarder.new do |name, *args, &block|
         if (iam.respond_to?(name) || iam.methods.include?(name)) && (got = iam.__send__(name, *args, &block))
-          thn = Forwarder.new do |name, *args, &block|
+          thn = Forwarder.new do |name, *inargs, &block|
             if name.sym == :then
-              thn
+              if block
+                ret = iam.instance_exec(*inargs, &block)
+                ret.define_singleton_method(:else) { |*vars| self }
+                ret
+              elsif inargs.mt?
+                thn
+              else
+                ret = inargs.sequester!
+                ret.define_singleton_method(:else) { |*vars| self }
+                ret
+              end
             else
-              ret = __send__(name, *args, &block)
-              ret.define_singleton_method(:else) { Forwarder.new { ret } }
+              ret = __send__(name, *inargs, &block)
+              ret.define_singleton_method(:else) { |*vars, &blk|
+                if vars.mt? && block._?
+                  Forwarder.new { ret }
+                else
+                  ret
+                end
+              }
               ret
             end
           end
         else
           ret = Forwarder.new do |name, *args, &block|
             if name.sym == :then
-              els = Forwarder.new do |name|
+              els = Forwarder.new do |name, *targs, &block|
                 if name.sym == :else
-                  Forwarder.new { |name, *args, &block| __send__(name, *args, &block) }
+                  if block
+                    iam.instance_exec(*targs, &block)
+                  elsif targs.mt?
+                    Forwarder.new { |name, *eargs, &block| __send__(name, *eargs, &block) }
+                  else
+                    targs.sequester!
+                  end
                 else
                   els
                 end

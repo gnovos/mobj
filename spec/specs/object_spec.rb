@@ -53,6 +53,7 @@ describe Mobj do
 
     it "can when" do
       o = Object.new
+      def o.to_s() 'ooo' end
       def o.foo_true() true end
       def o.foo_false() false end
       def o.bar() "bar" end
@@ -78,6 +79,24 @@ describe Mobj do
 
       o.if?.val(true){|a| !a }.bar == o
       o.if?.val(false){|a| !a }.bar == "bar"
+
+      "100.4".when("100.4").i!.should == 100
+      "100.4".when("100.5").i!.else('bar').should == "100.4"
+
+      o.when.foo_true.then('aaa').else('bbb').should == 'aaa'
+      o.when.foo_false.then('aaa').else('bbb').should == 'bbb'
+
+      o.when.foo_true.then{'aaa'}.else{'bbb'}.should == 'aaa'
+      o.when.foo_false.then{'aaa'}.else{'bbb'}.should == 'bbb'
+
+      o.when.foo_true.then('ta'){ |*a| "#{self}-#{a.join}" }.else('ea'){ |*a| "#{self}-#{a.join}" }.should == 'ooo-ta'
+      o.when.foo_false.then('ta'){ |*a| "#{self}-#{a.join}" }.else('ea'){ |*a| "#{self}-#{a.join}" }.should == 'ooo-ea'
+
+      o.when.foo_true.then.to_s.else('ea'){ |*a| "#{self}-#{a.join}" }.should == 'ooo'
+      o.when.foo_false.then.to_s.else('ea'){ |*a| "#{self}-#{a.join}" }.should == 'ooo-ea'
+
+      o.when.foo_true.then('ta'){ |*a| "#{self}-#{a.join}" }.else.to_s.should == 'ooo-ta'
+      o.when.foo_false.then('ta'){ |*a| "#{self}-#{a.join}" }.else.to_s.should == 'ooo'
 
     end
 
