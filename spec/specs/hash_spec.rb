@@ -3,6 +3,12 @@ require 'spec_helper'
 describe Mobj do
 
   describe Hash do
+
+    it "has shortcuts" do
+      {}.mt?.should be_true
+      { a:1 }.mt?.should be_false
+    end
+
     it "can apply" do
 
       target = [1, 2, 3, 4, 5]
@@ -18,12 +24,12 @@ describe Mobj do
     end
 
     it "can do cool things" do
-      hash = { :a => 'aaa', 'b' => :bbb, :zero => 0 }
-      hash.a.should == 'aaa'
+      hash = { :aa => 'aaa', 'b' => :bbb, :zero => 0 }
+      hash.aa.should == 'aaa'
       hash.b.should == :bbb
 
-      hash[:a].should == 'aaa'
-      hash['a'].should == 'aaa'
+      hash[:aa].should == 'aaa'
+      hash['aa'].should == 'aaa'
       hash[:b].should == :bbb
       hash['b'].should == :bbb
       hash.cc.should be_nil
@@ -31,19 +37,19 @@ describe Mobj do
       expect { hash.cc! }.to raise_exception
 
       hash[5, nil, :foo, 'b'].should == :bbb
-      hash[5, nil, :foo, :a].should == 'aaa'
+      hash[5, nil, :foo, :aa].should == 'aaa'
 
-      hash.a?.should be_true
+      hash.aa?.should be_true
       hash.b?.should be_true
       hash.zero?.should be_true
       hash.cc?.should be_false
 
-      hash.a = 'new a'
+      hash.aa = 'new a'
       hash.b = nil
       hash.cc = 15
 
       hash.should == {
-          a: 'new a',
+          aa: 'new a',
           'b' => nil,
           cc: 15,
           zero: 0
@@ -57,13 +63,13 @@ describe Mobj do
       hash.cc? { |val| "v:#{val}" }.should == 'v:true'
       hash.g? { |val| "v:#{val}" }.should == 'v:false'
 
-      hash.symvert.should == {a:"new a", "b"=>nil, zero:0, cc:15}
-      hash.symvert(:to_s).should == {"a"=>"new a", "b"=>"", "zero"=>"0", "cc"=>"15"}
-      hash.symvert(:to_sym).should == {a: :"new a", b: nil, zero: 0, cc: 15}
-      hash.symvert(:sym).should == {a: :"new a", b: :"", zero: :"0", cc: :"15"}
-      hash.symvert(:to_s, :sym).should == {"a"=>:"new a", "b"=>:"", "zero"=>:"0", "cc"=>:"15"}
-      hash.symvert(proc { |k| "[#{k}]" }, proc { |v| "(#{v})" }).should == {"[a]"=>"(new a)", "[b]"=>"()", "[zero]"=>"(0)", "[cc]"=>"(15)"}
-      hash.symvert(proc { |k,v| "[#{k}=#{v}]" }, proc { |k,v| "(#{k}=#{v})" }).should == {"[a=new a]"=>"(a=new a)", "[b=]"=>"(b=)", "[zero=0]"=>"(zero=0)", "[cc=15]"=>"(cc=15)"}
+      hash.symvert.should == {aa:"new a", "b"=>nil, zero:0, cc:15}
+      hash.symvert(:to_s).should == {"aa"=>"new a", "b"=>"", "zero"=>"0", "cc"=>"15"}
+      hash.symvert(:to_sym).should == {aa: :"new a", b: nil, zero: 0, cc: 15}
+      hash.symvert(:sym).should == {aa: :"new a", b: :"", zero: :"0", cc: :"15"}
+      hash.symvert(:to_s, :sym).should == {"aa"=>:"new a", "b"=>:"", "zero"=>:"0", "cc"=>:"15"}
+      hash.symvert(proc { |k| "[#{k}]" }, proc { |v| "(#{v})" }).should == {"[aa]"=>"(new a)", "[b]"=>"()", "[zero]"=>"(0)", "[cc]"=>"(15)"}
+      hash.symvert(proc { |k,v| "[#{k}=#{v}]" }, proc { |k,v| "(#{k}=#{v})" }).should == {"[aa=new a]"=>"(aa=new a)", "[b=]"=>"(b=)", "[zero=0]"=>"(zero=0)", "[cc=15]"=>"(cc=15)"}
 
       hash.h { |val| val.nil? }.should be_true
       hash.h('default').should == 'default'

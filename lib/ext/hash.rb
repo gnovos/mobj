@@ -4,6 +4,13 @@ module Mobj
 
   module HashEx
 
+    def filled?() !mt? end
+
+    alias_method :notempty?, :filled?
+    alias_method :noempty?, :filled?
+    alias_method :full?, :filled?
+    alias_method :unempty?, :filled?
+
     def apply!(obj)
       map do |key, value|
         obj.send(key, *value)
@@ -48,7 +55,7 @@ module Mobj
       value = if name[-1] == '=' && args.size == 1
         key = name[0...-1].sym
         key = key.to_s if key?(key.to_s)
-        self[key] = args.sequester
+        self[key] = args.sequester!
       elsif name[-1] == '?'
         key = name[0...-1].sym
         !!self[key, key.to_s]
@@ -56,13 +63,13 @@ module Mobj
         key = name[0...-1].sym
         val = self[key.sym] || self[key.to_s]
         if !val && (block || args.unempty?)
-          self[key] = val = (block ? block.call(*args) : args.sequester)
+          self[key] = val = (block ? block.call(*args) : args.sequester!)
         end
         super unless val
       else
         self[name.sym] || self[name.to_s]
       end
-      value ||= args.sequester unless args.empty?
+      value ||= args.sequester! unless args.empty?
 
       return block ? block[value] : value
     end
@@ -75,12 +82,14 @@ module Mobj
   class ::Hash
     include HashEx
 
+    alias_method :mt?, :empty?
+
     alias_method :mlookup, :[]
     alias_method :mdef, :default
     alias_method :mfetch, :fetch
 
     def [](*fkeys)
-      fkeys.map { |key| mlookup(key) || mfetch(key.sym) { mfetch(key.to_s) { mfetch(ki(key).sym) { mfetch(ki(key).to_s) { mdef(key) } } } } }.sequester
+      fkeys.map { |key| mlookup(key) || mfetch(key.sym) { mfetch(key.to_s) { mfetch(ki(key).sym) { mfetch(ki(key).to_s) { mdef(key) } } } } }.sequester!
     end
 
     def sym(recurse=false)

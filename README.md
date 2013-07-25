@@ -127,7 +127,7 @@ foo.compact.size == 1 ? foo.compact.first : foo.compact
 ... becomes ...
 
 ```ruby
-foo.sequester
+foo.sequester!
 ```
 
 Hash utils:

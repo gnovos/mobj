@@ -1,14 +1,27 @@
 module Mobj
 
   class ::Array
+
     alias_method :includes?, :include?
     alias_method :contains?, :include?
 
-    def unempty?()
-      !empty?
+    alias_method :mt?, :empty?
+    def filled?() !mt? end
+    alias_method :notempty?, :filled?
+    alias_method :full?, :filled?
+    alias_method :unempty?, :filled?
+
+    def ny?(method, *args)
+      any? { |o| o.send(method, *args) }
     end
 
-    alias_method :notempty?, :unempty?
+    def no?(method, *args)
+      none? { |o| o.send(method, *args) }
+    end
+
+    def ll?(method, *args)
+      all? { |o| o.send(method, *args) }
+    end
 
     def msum(initial = 0.0, op = :+, &block)
       if block
@@ -31,12 +44,16 @@ module Mobj
       self
     end
 
-    def sequester(crush = true)
+    def sequester!(crush = true)
       if crush
         compact.size <= 1 ? compact.first : self
       else
         size <= 1 ? first : self
       end
+    end
+
+    def realize!
+      empty? ? nil : self
     end
 
     def return_first(&block)
@@ -46,15 +63,16 @@ module Mobj
     end
 
     alias_method :earliest, :return_first
+    alias_method :first!, :return_first
 
     def msym() map(&:sym) end
 
     def apply(to)
       map do |m|
-        if m.is_a?(Symbol)
+        if m.m?
           to.send(m)
         else
-          m.to_s.walk(to)
+          m.s!.walk(to)
         end
       end
     end

@@ -30,6 +30,8 @@ module Mobj
 
   class ::String
 
+    alias_method :mt?, :empty?
+
     def cfmt
       colors = ANSI.colors.keys.join
       opts   = ANSI.options.keys.join

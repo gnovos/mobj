@@ -140,7 +140,7 @@ describe Mobj do
                       Mobj::Token.new(:path, :up),
                       Mobj::Token.new(:path, :a),
                       Mobj::Token.new(:up),
-                      Mobj::Token.new(:path, :val)).walk(Mobj::Circle.wrap(obj)).should == "right"
+                      Mobj::Token.new(:path, :val)).walk(Mobj::Circle.wrap!(obj)).should == "right"
 
     end
 

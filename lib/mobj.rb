@@ -9,6 +9,8 @@ module Mobj
     attr_accessor :root, :handler
     def initialize(root = nil, &handler) @root, @handler = root, handler end
     def method_missing(name, *args, &block) handler.call(name, *args, &block) end
+    def to_ary() [root, handler] end
+    def inspect() { class:self.class, root:root, handler:handler}.inspect end
   end
 
   class Token
@@ -16,15 +18,15 @@ module Mobj
       @type, @path, @options = type.to_sym, nil, {}
       tokens = []
       args.each do |arg|
-        if arg.is_a? Hash
+        if arg.h?
           @options.merge!(arg)
-        elsif arg.is_a? String
+        elsif arg.s?
           tokens << arg.sym
         else
           tokens << arg
         end
       end
-      @path = tokens.sequester
+      @path = tokens.sequester!
     end
 
     def to_s() "#{@type.to_s.upcase}(#@path#{ " => #@options" unless @options.empty?})" end
@@ -33,18 +35,18 @@ module Mobj
       obj.__mobj__reparent
       if path == :* || obj.nil?
         obj
-      elsif obj.is_a?(Array)
+      elsif obj.a?
         if path[0] == '*' && obj.respond_to?(path[1..-1].sym)
           obj.__send__(path[1..-1].sym)
         else
           obj.map { |o| extract(o, path) }
         end
-      elsif path.is_a?(Array)
+      elsif path.a?
         path.map { |pth| obj[pth.sym] }
       elsif path[0] == '*' && obj.respond_to?(path[1..-1].sym)
         obj.__send__(path[1..-1].sym)
       elsif obj.respond_to?(:[]) && (obj.is_a?(Hash) || path.to_s =~ /[0-9.-]+/)
-        if obj.is_a?(Hash)
+        if obj.h?
           obj[path.sym]
         else
           obj[path.to_s.to_i] if path.to_s =~ /^\d+$/
@@ -75,7 +77,7 @@ module Mobj
           else
             named = m.to_h.invert
             name = if named.empty?
-              m.captures.empty? ? key : m.captures.sequester
+              m.captures.empty? ? key : m.captures.sequester!
             else
               named.find { |k, v| !k.nil? }.attempt(key).last
             end
@@ -87,7 +89,7 @@ module Mobj
     end
 
     def walk(obj, root = obj)
-      obj, root = Circle.wrap(obj), Circle.wrap(root)
+      obj, root = Circle.wrap!(obj), Circle.wrap!(root)
       val = case @type
               when :literal
                 @path.to_s
@@ -135,16 +137,16 @@ module Mobj
   end
 
   class Circle
-    def self.wrap(wrapped)
+    def self.wrap!(wrapped)
       return wrapped if wrapped.is_a?(CircleHash) || wrapped.is_a?(CircleRay)
 
       if wrapped.is_a?(Array)
         circle = CircleRay.new
-        wrapped.each_with_index { |item, i| circle[i] = wrap(item) }
+        wrapped.each_with_index { |item, i| circle[i] = wrap!(item) }
         circle
       elsif wrapped.is_a?(Hash)
         circle = CircleHash.new
-        wrapped.each_pair { |key, val| circle[key] = wrap(val) }
+        wrapped.each_pair { |key, val| circle[key] = wrap!(val) }
         circle
       else
         wrapped
@@ -190,7 +192,7 @@ module Mobj
     end
 
     alias_method :lookup, :[]
-    def [](*keys) keys.map { |key| self.lookup(key) }.sequester end
+    def [](*keys) keys.map { |key| self.lookup(key) }.sequester! end
   end
 
 end

@@ -26,23 +26,23 @@ describe Mobj do
     end
     
     it "can sequester into a single result" do
-      [1].sequester.should == 1
-      [1,2].sequester.should == [1, 2]
+      [1].sequester!.should == 1
+      [1,2].sequester!.should == [1, 2]
 
-      [1,nil].sequester.should == 1
-      [nil].sequester.should == nil
-      [nil, nil].sequester.should == nil
+      [1,nil].sequester!.should == 1
+      [nil].sequester!.should == nil
+      [nil, nil].sequester!.should == nil
 
-      [1,nil].sequester(true).should == 1
-      [1,nil].sequester(false).should == [1, nil]
+      [1,nil].sequester!(true).should == 1
+      [1,nil].sequester!(false).should == [1, nil]
 
-      [nil].sequester(true).should == nil
-      [nil].sequester(false).should == nil
+      [nil].sequester!(true).should == nil
+      [nil].sequester!(false).should == nil
 
-      [nil, nil].sequester(true).should == nil
-      [nil, nil].sequester(false).should == [nil, nil]
+      [nil, nil].sequester!(true).should == nil
+      [nil, nil].sequester!(false).should == [nil, nil]
 
-      [[]].sequester.should == []
+      [[1, 2, 3]].sequester!.should == [1, 2, 3]
     end
 
     it "can msym" do

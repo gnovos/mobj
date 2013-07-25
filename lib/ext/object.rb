@@ -1,14 +1,80 @@
 module Mobj
 
   class ::Object
-    alias_method :responds_to?, :respond_to?
+
+    def null!(*) self end
+    def nil!(*) self end
+
+    def wrap!(*args, &block)
+      block ? instance_exec(*args, &block) : args.sequester!
+    end
+
+    alias_method :alter!, :wrap!
+    alias_method :be!, :wrap!
+
+    alias_method :with!, :tap
+
+    def tru?(t=true, _=nil, &block) block ? instance_exec(t, &block) : t end
+    def fals?(*) nil end
+
+    def iff?(value = nil, &block) block ? instance_exec(value, &block) : value end
+    def iffn?(_=nil) nil end
+
+    def responds_to?(*any)
+      any.flatten.select { |method| respond_to?(method) }.realize!
+    end
+
+    def responds_to_all?(*all)
+      responds_to?(all) == all
+    end
+
+    def a?(*kls)
+      kls.when.mt?.be!([Array]).any? { |k| is_a? k }
+    end
+
+    def p?() a? Proc end
+    def m?() a? Symbol end
+    def s?() a? String end
+    def i?() a? Fixnum end
+    def f?() a? Float end
+    def n?() a? Fixnum, Float end
+
+    def h?() a? Hash end
+    def c?() a? Array, Hash end
+
+    def x?() a? NilClass, FalseClass end
+
+    def z0?() respond_to?(:zero?) ? zero? : f!.zero? end
+
+    def un?()
+      x? || (s? && s !~ /\S/) || (c? && mt?) || (n? && z0?)
+    end
+
+    def o?() !un? end
 
     def i!() to_s.scan(/[\d\.]+/).join.to_i end #xxx strip out junk?
     def f!() to_s.scan(/[\d\.]+/).join.to_f end
-    def z0?() respond_to?(:zero?) ? zero? : f!.zero? end
+    def s!() to_s end
     def zeno!() z0? ? 1.0 : self end
 
-    alias_method :n?, :nil?
+    def u!(*args)
+      if a?
+        each { |i| i.u!(*args) }
+      else
+        if responds_to_all? :assign_attributes, :save
+          args.select(&:h?).each do |arg|
+            assign_attributes(arg)
+          end
+          save(validate:false)
+        elsif responds_to? :update_attribute
+          args.select(&:h?).each do |arg|
+            arg.each do |k, v|
+              update_attribute(k, v)
+            end
+          end
+        end
+      end
+    end
 
     def rand?
       rand(1000000).odd?
@@ -68,8 +134,9 @@ module Mobj
     alias_method :ifnil, :try?
 
     def when
+      iam = self
       Forwarder.new do |name, *args, &block|
-        if methods.include?(name) && __send__(name, *args, &block)
+        if (iam.respond_to?(name) || iam.methods.include?(name)) && (got = iam.__send__(name, *args, &block))
           thn = Forwarder.new do |name, *args, &block|
             if name.sym == :then
               thn
@@ -80,7 +147,7 @@ module Mobj
             end
           end
         else
-          Forwarder.new do |name|
+          ret = Forwarder.new do |name, *args, &block|
             if name.sym == :then
               els = Forwarder.new do |name|
                 if name.sym == :else
@@ -90,7 +157,7 @@ module Mobj
                 end
               end
             else
-              self
+              iam
             end
           end
         end
@@ -98,10 +165,6 @@ module Mobj
     end
 
     alias_method :if?, :when
-
-    def iff?(value = nil, &block)
-      block ? instance_exec(value, &block) : value
-    end
 
   end
 

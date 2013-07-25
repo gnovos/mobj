@@ -4,6 +4,30 @@ describe Mobj do
 
   describe Object do
 
+    it "has shortcuts" do
+      [].a?.should be_true
+      {}.h?.should be_true
+      {}.c?.should be_true
+      [].c?.should be_true
+
+      "".s?.should be_true
+      1.i?.should be_true
+      1.1.f?.should be_true
+      50.n?.should be_true
+      50.1.n?.should be_true
+      ->{}.p?.should be_true
+    end
+
+    it "has if(and only if)?" do
+      "not nil".iff?('foo').should == 'foo'
+      nil.iff?('foo').should be_nil
+      false.iff?('foo').should be_nil
+
+      "not nil".iff? { reverse }.should == 'lin ton'
+      nil.iff? { reverse } .should be_nil
+      false.iff? { reverse } .should be_nil
+    end
+
     it "has a shortcut for if/then" do
 
       "true".tru?("this", "not").should == "this"
@@ -22,9 +46,9 @@ describe Mobj do
 
     it "can be altered and replaced" do
       o = { foo: 'foo', bar: 'bar' }
-      o.alter { self.foo }.should == 'foo'
-      o.alter {  }.should be_nil
-      o.alter('val'){ |v| "#{v}=#{self.foo}" }.should == 'val=foo'
+      o.alter! { self.foo }.should == 'foo'
+      o.alter! {  }.should be_nil
+      o.alter!('val'){ |v| "#{v}=#{self.foo}" }.should == 'val=foo'
     end
 
     it "can when" do
@@ -33,6 +57,7 @@ describe Mobj do
       def o.foo_false() false end
       def o.bar() "bar" end
       def o.baz() "baz" end
+      def o.val(v=nil) block_given? ? yield(v) : v end
       o.when.foo_true.then.bar.else.baz.should == "bar"
       o.when.foo_false.then.bar.else.baz.should == "baz"
       o.when.foo.then.bar.else.baz.should == "baz"
@@ -41,6 +66,19 @@ describe Mobj do
       o.when.foo_false.bar.should == o
 
       o.if?.foo_true.then.bar.else.baz.should == "bar"
+
+      o.if?.val(true).then.bar.else.baz.should == "bar"
+      o.if?.val(false).then.bar.else.baz.should == "baz"
+
+      o.if?.val(true).bar == "bar"
+      o.if?.val(false).bar == o
+
+      o.if?.val{true}.bar == "bar"
+      o.if?.val{false}.bar == o
+
+      o.if?.val(true){|a| !a }.bar == o
+      o.if?.val(false){|a| !a }.bar == "bar"
+
     end
 
     it "can try?" do
