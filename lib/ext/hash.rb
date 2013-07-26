@@ -74,9 +74,6 @@ module Mobj
       return block ? block[value] : value
     end
 
-    def denil!
-      reject!{ |k, v| k.nil? || v.nil? }
-    end
   end
 
   class ::Hash
@@ -96,6 +93,10 @@ module Mobj
       each.with_object({}) do |(key, value), o|
         o[key.sym] = recurse ? value.sym : value
       end
+    end
+
+    def denil!
+      reject!{ |k, v| k.nil? || v.nil? }
     end
 
   end
