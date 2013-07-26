@@ -95,8 +95,8 @@ module Mobj
       end
     end
 
-    def denil!
-      reject!{ |k, v| k.nil? || v.nil? }
+    def denil
+      reject{ |k, v| k.nil? || v.nil? }
     end
 
   end

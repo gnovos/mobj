@@ -9,7 +9,7 @@ describe Mobj do
         a:nil,
         nil => 'b',
         c:'d'
-      }.denil!.should == { c:'d' }
+      }.denil.should == { c:'d' }
     end
 
     it "has shortcuts" do
