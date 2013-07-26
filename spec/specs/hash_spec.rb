@@ -4,6 +4,14 @@ describe Mobj do
 
   describe Hash do
 
+    it "can remove nil keys and values" do
+      {
+        a:nil,
+        nil => 'b',
+        c:'d'
+      }.denil!.should == { c:'d' }
+    end
+
     it "has shortcuts" do
       {}.mt?.should be_true
       { a:1 }.mt?.should be_false

@@ -101,6 +101,7 @@ describe Mobj do
     end
 
     it "can try?" do
+
       "1.3".try?.to_f.should == 1.3
       "1.3".try?.foo.should be_false
 
